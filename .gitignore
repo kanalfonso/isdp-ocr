@@ -1,0 +1,6 @@
+.streamlit/
+.vscode/
+sms_screenshot/
+__pycache__/
+.env
+config.yaml
