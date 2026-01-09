@@ -38,16 +38,19 @@ def clear_contents():
 
 def ocr_navigation(
         uploaded_file,
-        crop_image_tick,
-        col1,
-        col2,
-        crop_box_color,
-        parse_image_btn,
-        container
+        ui: dict
     ):
     """
     Initiate UI change depending on whether user decides to use crop box or not
     """
+
+    # set as variable the components passed to the dict
+    container = ui['container']
+    col1, col2 = ui['cols']
+    parse_image_btn = ui['parse_image_btn']
+    crop_image_tick = ui['crop_image_tick']
+    crop_box_color = ui['crop_box_color']
+
 
     if uploaded_file:
 
@@ -149,17 +152,19 @@ def main():
     # Columns
     col1, col2 = st.columns(2)
     
+    # collate components in a dict
+    ui = {
+        "container": container,
+        "cols": (col1, col2),
+        "parse_image_btn": parse_image_btn,
+        "crop_image_tick": crop_image_tick,
+        "crop_box_color": crop_box_color
+    }
 
-
-    # navigation for ocr
+    # navigation for ocr -- pass components here
     ocr_navigation(
         uploaded_file,
-        crop_image_tick,
-        col1,
-        col2,
-        crop_box_color,
-        parse_image_btn,
-        container
+        ui
     )
 
 
