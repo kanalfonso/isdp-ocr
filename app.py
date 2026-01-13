@@ -14,9 +14,11 @@ def main():
 
     st.set_page_config(layout="wide", page_title='ISDP OCR Tool', page_icon='💼')
     
-    logout_page = st.Page('pages/Logout.py', title='Log out', icon=":material/logout:")
-    login_page = st.Page('pages/Login.py', title='Login')
+    logout_page = st.Page('pages/logout_page.py', title='Log out', icon=":material/logout:")
+    login_page = st.Page('pages/login_page.py', title='Login')
     ocr_page = st.Page('pages/ocr_page.py', title='OCR', icon='📑')
+    submissions_page = st.Page('pages/submissions_page.py', title='Submissions', icon='💾')
+    connection_page = st.Page('pages/connection_page.py', title='Connect to Snowflake', icon='❄️')
     
     # with open('config.yaml', "r") as f:
     #     config = yaml.safe_load(f)
@@ -27,7 +29,7 @@ def main():
     # else:
     #     pg = st.navigation([login_page])
     
-    pg = st.navigation([ocr_page, logout_page])
+    pg = st.navigation([connection_page, ocr_page, submissions_page, logout_page])
     pg.run()
     
 

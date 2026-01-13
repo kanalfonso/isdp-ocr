@@ -22,18 +22,12 @@ def parse_image(
     with status:
         with st.spinner("Parsing image...", show_time=True):
             time.sleep(1)
-            # parsed_text = detect_text_from_bytes(file_bytes)
+            parsed_text = detect_text_from_bytes(file_bytes)
         
         # Show success inside the top container
         container.success("Image successfully parsed!")
-        # st.session_state['parsed_text'] = parsed_text
+        st.session_state['parsed_text'] = parsed_text
 
-# backend func
-def clear_contents():
-    """
-    Clears session state for parsed_text
-    """
-    st.session_state.pop("parsed_text", None)
 
 
 def ocr_navigation(
@@ -51,12 +45,17 @@ def ocr_navigation(
     crop_image_tick = ui['crop_image_tick']
     crop_box_color = ui['crop_box_color']
 
+    #### TODO: after each submit, add the submission to the session state dataframe
+    if 'submissions_df' not in st.session_state:
+        st.session_state['submissions_df'] = None
 
     if uploaded_file:
 
         # returns an Image object
         img = Image.open(uploaded_file)
-        
+
+
+      
         if crop_image_tick:
 
             with col1:      
@@ -88,7 +87,7 @@ def ocr_navigation(
                     st.image(cropped_img)
 
 
-            st.text_area(
+            txt_submission = st.text_area(
                 label="Parsed Message",
                 value=st.session_state['parsed_text'] if 'parsed_text' in st.session_state else None,
                 height=400,
@@ -108,11 +107,43 @@ def ocr_navigation(
                 
 
             with col2:
-                st.text_area(
+                txt_submission = st.text_area(
                     label="Parsed Message",
                     value=st.session_state['parsed_text'] if 'parsed_text' in st.session_state else None,
                     height=400
                 )
+
+ 
+
+        submit_message_btn = st.button('Submit')
+        
+        if submit_message_btn:
+      
+
+            if (txt_submission is not None) and (txt_submission.strip() != ""):
+                st.session_state['txt_submission'] = txt_submission
+                st.session_state['submission_done'] = True
+                
+
+            else:
+                st.session_state['txt_submission'] = txt_submission
+                st.session_state['submission_done'] = False
+                
+
+            # Show success if submission is done
+            if st.session_state.submission_done:
+                container.success('Submission recorded! Please view entry in **Submissions** Page')
+            else:
+                container.warning('Please ensure that the text field is not blank!')   
+        
+    
+        
+           
+
+
+    # check session state variables
+    st.write(st.session_state) 
+
 
 
 # UI func
@@ -135,11 +166,11 @@ def main():
 
         if uploaded_file:
             parse_image_btn = st.button('Parse image')   
-            st.button('Clear contents', on_click=clear_contents)  
-
 
             crop_image_tick = st.checkbox('Crop Image')
             
+
+
             if crop_image_tick:
                 ## Cropper settings
                 crop_box_color = st.color_picker(label="Crop Box Color", value='#0000FF')

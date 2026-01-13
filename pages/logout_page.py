@@ -28,7 +28,7 @@ if __name__ == '__page__':
     try:
         # Ensure redirection after reloading
         if "email" and "credentials" not in st.session_state:  # Or check authentication state
-            st.switch_page("pages/Login.py")  # Redirect to login
+            st.switch_page("pages/login_page.py")  # Redirect to login
         else:
             logout_option()
     except Exception as e:
