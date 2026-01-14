@@ -2,6 +2,7 @@ import streamlit as st
 import time
 from streamlit_cropper import st_cropper
 from PIL import Image
+import pandas as pd
 
 from utils.image_processing import pil_image_to_bytes, detect_text_from_bytes
 
@@ -22,11 +23,11 @@ def parse_image(
     with status:
         with st.spinner("Parsing image...", show_time=True):
             time.sleep(1)
-            parsed_text = detect_text_from_bytes(file_bytes)
+            # parsed_text = detect_text_from_bytes(file_bytes)
         
         # Show success inside the top container
         container.success("Image successfully parsed!")
-        st.session_state['parsed_text'] = parsed_text
+        st.session_state['parsed_text'] = 'Parsed text'
 
 
 
@@ -45,27 +46,33 @@ def ocr_navigation(
     crop_image_tick = ui['crop_image_tick']
     crop_box_color = ui['crop_box_color']
 
+
     #### TODO: after each submit, add the submission to the session state dataframe
     if 'submissions_df' not in st.session_state:
-        st.session_state['submissions_df'] = None
+        st.session_state['submissions_df'] = pd.DataFrame()
+
 
     if uploaded_file:
 
         # returns an Image object
         img = Image.open(uploaded_file)
 
-
+        
       
         if crop_image_tick:
 
             with col1:      
                 # PIL image
                 # st.write('Set crop box')
-                cropped_img = st_cropper(
-                    img, 
-                    realtime_update=True, 
-                    box_color=crop_box_color
-                )
+                
+                with st.container(border=True, width=1000):
+                    
+                    # interactive pic with cropbox
+                    cropped_img = st_cropper(
+                        img, 
+                        realtime_update=True, 
+                        box_color=crop_box_color
+                    )
 
                 
 
@@ -80,8 +87,10 @@ def ocr_navigation(
                 
             with col2:
 
-                cropped_container = st.container(width=800, height=800)
+                cropped_container = st.container(width=1000, border=True)
 
+
+                # result of the st cropper
                 with cropped_container:
                     st.write("Cropped Image")
                     st.image(cropped_img)
@@ -96,7 +105,8 @@ def ocr_navigation(
 
         else:
             with col1:
-                st.image(img)
+                with st.container(border=True, width=1000):
+                    st.image(img)
 
                 if parse_image_btn:
                     img_bytes = pil_image_to_bytes(img)
@@ -107,6 +117,7 @@ def ocr_navigation(
                 
 
             with col2:
+
                 txt_submission = st.text_area(
                     label="Parsed Message",
                     value=st.session_state['parsed_text'] if 'parsed_text' in st.session_state else None,
@@ -115,30 +126,37 @@ def ocr_navigation(
 
  
 
-        submit_message_btn = st.button('Submit')
+
+        #### LOGIC FOR SUBMITTING RECORDS ####
         
-        if submit_message_btn:
+        if st.button('Submit'):
       
 
             if (txt_submission is not None) and (txt_submission.strip() != ""):
-                st.session_state['txt_submission'] = txt_submission
+                row = {
+                    'content': txt_submission, 
+                    'spam_tag': None
+                }
+
+                st.session_state['txt_submission'] = row
                 st.session_state['submission_done'] = True
                 
 
             else:
-                st.session_state['txt_submission'] = txt_submission
+                st.session_state['txt_submission'] = None
                 st.session_state['submission_done'] = False
                 
 
             # Show success if submission is done
             if st.session_state.submission_done:
-                container.success('Submission recorded! Please view entry in **Submissions** Page')
+                container.success('Submission recorded! To view, edit, or delete entry proceed to the **Submissions** Page')
+                latest_submission = pd.DataFrame([row])
+
+                st.session_state.submissions_df = pd.concat([st.session_state.submissions_df, latest_submission], ignore_index=True)
+
+
             else:
                 container.warning('Please ensure that the text field is not blank!')   
-        
-    
-        
-           
 
 
     # check session state variables
@@ -175,7 +193,8 @@ def main():
                 ## Cropper settings
                 crop_box_color = st.color_picker(label="Crop Box Color", value='#0000FF')
             
-
+    # Title of Page
+    st.title('Text-to-Image Extraction')
 
     # Container for notification  
     container = st.container()
