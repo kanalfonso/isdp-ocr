@@ -33,7 +33,9 @@ def parse_image(
             parsed_text = detect_text_from_bytes(img_bytes)
         
         # Show success inside the top container
-        container.success("Image successfully parsed!")
+        container.success(
+            "✅ Image parsed successfully! Please verify the text and edit if needed."
+        )
 
         # Store results in `_text_submission`
         st.session_state._text_submission = 'parsed_text'
@@ -41,12 +43,13 @@ def parse_image(
 
 
 
-def clear_contents():
+def clear_content():
     """
     Set st.session_state._text_submission to None
     """
     
     st.session_state._text_submission = None
+    st.session_state._is_clear_content = True
 
 
 
@@ -82,7 +85,9 @@ def process_submission(container, text_submission):
 
         st.session_state.submissions_df = pd.concat([st.session_state.submissions_df, latest_submission], ignore_index=True)
 
-        container.success('Submission recorded! To view, edit, or delete entry proceed to the **Submissions** Page')
+        container.success(
+            "✅ Submission saved! Predict, edit, or delete it in the **Submissions** page."
+        )
 
 
     # Invalid Submission
@@ -130,7 +135,7 @@ def sidebar_ui():
             st.button(
                 'Clear Submission',
                 key='_clear_contents',
-                on_click=clear_contents
+                on_click=clear_content
             )
 
 
@@ -164,6 +169,10 @@ def main():
 
         # Container for notification  
         container = st.container()
+
+        if st.session_state.get('_is_clear_content'):
+            container.info('ℹ️ Text field has been cleared')
+            st.session_state['_is_clear_content'] = False
 
 
         # Columns
@@ -218,7 +227,11 @@ def main():
             on_click=process_submission,
             args=[container, st.session_state._text_submission]
         )
-            
+
+    else:  
+        container = st.container()
+        container.info('ℹ️ Please upload an image file to proceed.')
+
     st.write(st.session_state)
 
 

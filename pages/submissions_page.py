@@ -1,7 +1,10 @@
 # note callback executes before script re-run when clicking on widget
 
 import streamlit as st
+import time
 import pandas as pd
+
+# helper funcs
 from utils.streamlit_utils import persist_key
 
 ### Pop-up message when `Delete entry` has been clicked ### 
@@ -43,6 +46,18 @@ def delete_all():
         st.rerun()
 
 
+
+# backend
+def predict_entries(container, df):
+    status = container.empty()
+
+    with status:
+        with st.spinner("Predicting entries...", show_time=True):
+            time.sleep(1)
+            df['spam_tag'] = '?'
+    
+    # Show success inside the top container
+    container.success("✅ Predictions successfully generated!")
 
 
 ## Sidebar
@@ -120,13 +135,13 @@ def delete_page():
     """
     UI when user chooses `Delete` as the selected CRUD operation
     """
-    st.title('Delete a Record')
+    st.title('Delete Record(s)')
 
 
     container = st.container()
 
     if st.session_state.get('is_successful_delete') and st.session_state.get('_ids_to_delete'):
-        container.success(f'Successfully deleted record(s) with ID(s): {st.session_state._ids_to_delete}')
+        container.success(f'✅ Successfully deleted record(s) with ID(s): {st.session_state._ids_to_delete}')
 
         # set back to False immediately so the notifcation goes away
         st.session_state.is_successful_delete = False
@@ -164,6 +179,16 @@ def predict_page():
     st.title('Predict Spam Type of Records')
 
     container = st.container()
+
+    st.dataframe(st.session_state.submissions_df, hide_index=True)
+
+
+    st.button(
+        'Predict',
+        on_click=predict_entries,
+        args=(container, st.session_state.submissions_df)
+    )
+
 
 
 
