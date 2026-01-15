@@ -17,7 +17,6 @@ def main():
     logout_page = st.Page('pages/logout_page.py', title='Log out', icon=":material/logout:")
     login_page = st.Page('pages/login_page.py', title='Login')
     ocr_page = st.Page('pages/ocr_page.py', title='OCR (Create)', icon='📑')
-    ocr_page_2 = st.Page('pages/ocr_page_v2.py', title='OCR (Create) 2', icon='📑')
     submissions_page = st.Page('pages/submissions_page.py', title='Submissions (Read, Predict, Update, Delete)', icon='💾')
     connection_page = st.Page('pages/connection_page.py', title='Connect to Snowflake', icon='❄️')
     
@@ -30,7 +29,7 @@ def main():
     # else:
     #     pg = st.navigation([login_page])
     
-    pg = st.navigation([connection_page, ocr_page, ocr_page_2, submissions_page, logout_page])
+    pg = st.navigation([connection_page, ocr_page, submissions_page, logout_page])
     pg.run()
     
 

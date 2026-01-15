@@ -5,220 +5,223 @@ from PIL import Image
 import pandas as pd
 
 from utils.image_processing import pil_image_to_bytes, detect_text_from_bytes
+from typing import Optional
 
+# for type annotations in func
+from streamlit.runtime.uploaded_file_manager import UploadedFile
 
 # backend func
 def parse_image(
         container: st.delta_generator.DeltaGenerator, 
-        file_bytes: bytes
-    ):
+        image_file
+        
+    ) -> str:
     """
     Parse image by passing image as bytes
 
-    Returns parsed text stored in session state and 
-    container modified with success notification
+    Notifies image has been successfully parsed 
+    Stores results to `_text_submission` in session state
     """
     status = container.empty()
 
     with status:
         with st.spinner("Parsing image...", show_time=True):
             time.sleep(1)
-            # parsed_text = detect_text_from_bytes(file_bytes)
+        
+            img_bytes = pil_image_to_bytes(image_file)
+
+            parsed_text = detect_text_from_bytes(img_bytes)
         
         # Show success inside the top container
         container.success("Image successfully parsed!")
-        st.session_state['parsed_text'] = 'Parsed text'
+
+        # Store results in `_text_submission`
+        st.session_state._text_submission = 'parsed_text'
 
 
 
-def ocr_navigation(
-        uploaded_file,
-        ui: dict
-    ):
+
+def clear_contents():
     """
-    Initiate UI change depending on whether user decides to use crop box or not
+    Set st.session_state._text_submission to None
+    """
+    
+    st.session_state._text_submission = None
+
+
+
+def process_submission(container, text_submission):
+    """
+    Process text submission by storing it, along with other submission, in a pandas DataFrame
     """
 
-    # set as variable the components passed to the dict
-    container = ui['container']
-    col1, col2 = ui['cols']
-    parse_image_btn = ui['parse_image_btn']
-    crop_image_tick = ui['crop_image_tick']
-    crop_box_color = ui['crop_box_color']
+    # Valid Submission
+    if (text_submission is not None) and (text_submission.strip() != ""):
 
 
-    #### TODO: after each submit, add the submission to the session state dataframe
-    if 'submissions_df' not in st.session_state:
-        st.session_state['submissions_df'] = pd.DataFrame()
-
-
-    if uploaded_file:
-
-        # returns an Image object
-        img = Image.open(uploaded_file)
-
+        # For first run when submissions_df doesn't exist yet
+        if 'submissions_df' not in st.session_state:
+            st.session_state.submissions_df = pd.DataFrame()
         
-      
-        if crop_image_tick:
-
-            with col1:      
-                # PIL image
-                # st.write('Set crop box')
-                
-                with st.container(border=True, width=1000):
-                    
-                    # interactive pic with cropbox
-                    cropped_img = st_cropper(
-                        img, 
-                        realtime_update=True, 
-                        box_color=crop_box_color
-                    )
-
-                
-
-
-                if parse_image_btn:
-                    # Convert image to bytes
-                    cropped_img_bytes = pil_image_to_bytes(cropped_img)
-                    
-                    # Parse image
-                    parse_image(container, cropped_img_bytes)
-
-                
-            with col2:
-
-                cropped_container = st.container(width=1000, border=True)
-
-
-                # result of the st cropper
-                with cropped_container:
-                    st.write("Cropped Image")
-                    st.image(cropped_img)
-
-
-            txt_submission = st.text_area(
-                label="Parsed Message",
-                value=st.session_state['parsed_text'] if 'parsed_text' in st.session_state else None,
-                height=400,
-            )
-
-
+        # ID column for dataframe
+        if st.session_state.submissions_df.empty:
+            next_id = 1
         else:
-            with col1:
-                with st.container(border=True, width=1000):
-                    st.image(img)
-
-                if parse_image_btn:
-                    img_bytes = pil_image_to_bytes(img)
-
-                    # Parse image
-                    parse_image(container, img_bytes)
-
-                
-
-            with col2:
-
-                txt_submission = st.text_area(
-                    label="Parsed Message",
-                    value=st.session_state['parsed_text'] if 'parsed_text' in st.session_state else None,
-                    height=400
-                )
-
- 
+            next_id = st.session_state.submissions_df['id'].max() + 1
 
 
-        #### LOGIC FOR SUBMITTING RECORDS ####
-        
-        if st.button('Submit'):
-      
+        row = {
+            'id': next_id, 
+            'content': text_submission, 
+            'spam_tag': None
+        }
 
-            if (txt_submission is not None) and (txt_submission.strip() != ""):
-                row = {
-                    'content': txt_submission, 
-                    'spam_tag': None
-                }
-
-                st.session_state['txt_submission'] = row
-                st.session_state['submission_done'] = True
-                
-
-            else:
-                st.session_state['txt_submission'] = None
-                st.session_state['submission_done'] = False
-                
-
-            # Show success if submission is done
-            if st.session_state.submission_done:
-                container.success('Submission recorded! To view, edit, or delete entry proceed to the **Submissions** Page')
-                latest_submission = pd.DataFrame([row])
-
-                st.session_state.submissions_df = pd.concat([st.session_state.submissions_df, latest_submission], ignore_index=True)
-
-
-            else:
-                container.warning('Please ensure that the text field is not blank!')   
-
-
-    # check session state variables
-    st.write(st.session_state) 
+        latest_submission = pd.DataFrame([row])
 
 
 
-# UI func
-def main():
+        st.session_state.submissions_df = pd.concat([st.session_state.submissions_df, latest_submission], ignore_index=True)
+
+        container.success('Submission recorded! To view, edit, or delete entry proceed to the **Submissions** Page')
+
+
+    # Invalid Submission
+    else:
+        container.error('⚠️ Please ensure that the text field is not **BLANK**!')   
+
+
+def sidebar_ui():
     """
-    Page navigation for OCR page
+    Wrapper on sidebar UI for the OCR Page
     """
 
-    # Initially set components to `None`
-    crop_image_tick = None
-    crop_box_color = None
-    parse_image_btn = None
 
     with st.sidebar:
-        uploaded_file = st.file_uploader(
+
+        # file uploader widget
+        st.file_uploader(
+            key="_uploaded_file",
             label="Choose an image",
             accept_multiple_files=False, 
             type=["jpg", "png"]
         )
 
-        if uploaded_file:
-            parse_image_btn = st.button('Parse image')   
 
-            crop_image_tick = st.checkbox('Crop Image')
-            
+        if st.session_state.get('_uploaded_file'):
+
+            # Parse Image button
+            st.button(
+                'Parse Image',
+                key='_parse_image'
+            )
+
+            # Crop Image tick
+            st.checkbox(
+                'Crop Image',
+                key='_crop_image'
+            )
+
+            st.markdown(
+                "<div style='margin-top: 32px'></div>", 
+                unsafe_allow_html=True
+            )
+
+            st.button(
+                'Clear Submission',
+                key='_clear_contents',
+                on_click=clear_contents
+            )
 
 
-            if crop_image_tick:
-                ## Cropper settings
-                crop_box_color = st.color_picker(label="Crop Box Color", value='#0000FF')
-            
-    # Title of Page
-    st.title('Text-to-Image Extraction')
+        # If crop image tick box is clicked
+        if st.session_state.get('_crop_image'):
+            ## Change crop box color
+            st.color_picker(
+                key="_crop_box_color",
+                label="Crop Box Color", 
+                value='#0000FF'
+            )
 
-    # Container for notification  
-    container = st.container()
 
-    # Columns
-    col1, col2 = st.columns(2)
+
+
+
+
+def main():
+
+    sidebar_ui()
+
+    ##### Main Page #####
+
+
+
+    # Submit an uploaded file
+    if st.session_state.get('_uploaded_file'):
     
-    # collate components in a dict
-    ui = {
-        "container": container,
-        "cols": (col1, col2),
-        "parse_image_btn": parse_image_btn,
-        "crop_image_tick": crop_image_tick,
-        "crop_box_color": crop_box_color
-    }
+        # Title
+        st.title('Text-to-Image Extraction')
 
-    # navigation for ocr -- pass components here
-    ocr_navigation(
-        uploaded_file,
-        ui
-    )
+        # Container for notification  
+        container = st.container()
 
 
+        # Columns
+        col1, col2 = st.columns([0.5, 0.5])
+        
+        uploaded_file = st.session_state._uploaded_file
+        
+        # Transform uploaded file to Image object
+        img = Image.open(uploaded_file)
+
+
+        # User ticks Crop Image
+        if st.session_state.get('_crop_image'):
+
+            with col1: 
+                st.write('Set Crop Box')
+                with st.container(border=True):
+                    # Interactive image cropper
+                    cropped_img = st_cropper(
+                        img, 
+                        realtime_update=True, 
+                        box_color=st.session_state._crop_box_color
+                    )
+
+            with col2:
+                st.write('Crop Results')
+                with st.container(border=True):
+                    st.image(cropped_img)
+        
+
+        # User DOESN'T tick Crop Image
+        else:
+            st.image(img)
+
+
+        # If the `Parse Image` button is clicked
+        if st.session_state.get('_parse_image'):
+            # Stores parsed text to st.session_state._text_submission
+            parse_image(container, img)
+
+
+        st.text_area(
+            key='_text_submission',
+            label="Parsed Message",
+            value=None,
+            height=300,
+            placeholder='Results will load here after `Parse Image` button is clicked.'
+        )
+
+        st.button(
+            'Submit',
+            on_click=process_submission,
+            args=[container, st.session_state._text_submission]
+        )
+            
+    st.write(st.session_state)
 
 
 if __name__ == '__main__':
     main()
+
+    
