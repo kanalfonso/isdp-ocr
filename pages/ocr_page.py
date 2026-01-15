@@ -4,11 +4,11 @@ from streamlit_cropper import st_cropper
 from PIL import Image
 import pandas as pd
 
+# helper function
 from utils.image_processing import pil_image_to_bytes, detect_text_from_bytes
-from typing import Optional
 
-# for type annotations in func
-from streamlit.runtime.uploaded_file_manager import UploadedFile
+
+
 
 # backend func
 def parse_image(
@@ -107,6 +107,7 @@ def sidebar_ui():
         )
 
 
+        # If file has been uploaded
         if st.session_state.get('_uploaded_file'):
 
             # Parse Image button

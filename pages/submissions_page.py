@@ -2,14 +2,7 @@
 
 import streamlit as st
 import pandas as pd
-
-# Backend
-def persist_key(key):
-    """
-    Persists latest CRUD operation selection even when switching to different pages
-    """
-    st.session_state[key] = st.session_state['_' + key] 
-
+from utils.streamlit_utils import persist_key
 
 ### Pop-up message when `Delete entry` has been clicked ### 
 @st.dialog('Confirm Deletion')
