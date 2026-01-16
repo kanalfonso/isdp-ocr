@@ -60,11 +60,6 @@ def process_submission(container, text_submission):
 
     # Valid Submission
     if (text_submission is not None) and (text_submission.strip() != ""):
-
-
-        # For first run when submissions_df doesn't exist yet
-        if 'submissions_df' not in st.session_state:
-            st.session_state.submissions_df = pd.DataFrame()
         
         # ID column for dataframe
         if st.session_state.submissions_df.empty:
@@ -153,7 +148,7 @@ def sidebar_ui():
 
 
 
-def main():
+def create_page():
 
     sidebar_ui()
 
@@ -232,10 +227,8 @@ def main():
         container = st.container()
         container.info('ℹ️ Please upload an image file to proceed.')
 
-    st.write(st.session_state)
-
 
 if __name__ == '__main__':
-    main()
+    create_page()
 
     
