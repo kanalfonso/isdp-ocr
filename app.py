@@ -22,7 +22,7 @@ def main():
     
     logout_page = st.Page('pages/logout_page.py', title='Log out', icon=":material/logout:")
     login_page = st.Page('pages/login_page.py', title='Login')
-    submissions_page = st.Page('pages/submissions_navigation.py', title='Submissions (Create, Read, Update, Delete)', icon='💾')
+    crud_page = st.Page('pages/crud_navigation.py', title='Submissions (Create, Read, Update, Delete)', icon='💾')
     predict_page = st.Page('pages/predict_page.py', title='Generate Spam Tag', icon='🤖')
     connection_page = st.Page('pages/connection_page.py', title='Connect to Snowflake', icon='❄️')
     
@@ -36,7 +36,7 @@ def main():
     #     pg = st.navigation([login_page])
     
     
-    pg = st.navigation([connection_page, submissions_page, predict_page, logout_page])
+    pg = st.navigation([connection_page, crud_page, predict_page, logout_page])
     pg.run()
     
     st.write(st.session_state)

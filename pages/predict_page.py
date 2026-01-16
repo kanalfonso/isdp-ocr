@@ -9,7 +9,7 @@ def predict_entries(container, df):
     with status:
         with st.spinner("Predicting entries...", show_time=True):
             time.sleep(1)
-            df['spam_tag'] = '?'
+            df['spam_tag'] = 'P2P'
     
     # Show success inside the top container
     container.success("✅ Predictions successfully generated!")
