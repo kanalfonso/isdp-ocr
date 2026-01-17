@@ -1,7 +1,7 @@
 import pandas as pd
 import streamlit as st
 
-@st.dialog("Edit Records")
+@st.dialog("Confirm Update")
 def update_popup(edited_df):
     st.write(
         f"Are you sure you want to edit the submissions?"
@@ -19,15 +19,16 @@ def update_popup(edited_df):
 
 def update_page_v2():
 
-    st.title('Update a Record')
+    st.title('Update Records')
 
     container = st.container()
 
 
     container.info(
-            "ℹ️ Double-click any cell to make changes. ID fields are read-only."
+        "ℹ️ Double-click a cell to edit (ID fields are read-only). "
+        "\n\nPress **Enter** or click outside the cell to register changes. "
+        "\n\nThe **Submit Changes** button is only enabled when changes are detected."
     )
-
 
     if st.session_state.get('is_successful_update'):
         container.success('Successful edit')
@@ -68,14 +69,12 @@ def update_page_v2():
         hide_index=True,
     )
 
-    
-    if st.button("Submit Changes"):
+    # True if edited_df != submission_df
+    has_changes = not edited_df.equals(st.session_state.submissions_df)
 
-        # exactly the same
-        if edited_df.equals(st.session_state.submissions_df):
-            container.warning('Nothing changed. Your table is the same as before.')
-        else:
-            update_popup(edited_df)
+    
+    if st.button("Submit Changes", disabled=not has_changes):
+        update_popup(edited_df)
 
 
 if __name__ == '__main__':

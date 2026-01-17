@@ -27,7 +27,7 @@ def delete_page():
     """
     UI when user chooses `Delete` as the selected CRUD operation
     """
-    st.title('Delete Record(s)')
+    st.title('Delete Records')
 
 
     container = st.container()

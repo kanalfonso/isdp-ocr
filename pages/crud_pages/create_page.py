@@ -53,13 +53,13 @@ def clear_content():
 
 
 
-def process_submission(container, text_submission):
+def process_submission(container):
     """
     Process text submission by storing it, along with other submission, in a pandas DataFrame
     """
 
     # Valid Submission
-    if (text_submission is not None) and (text_submission.strip() != ""):
+    if (st.session_state._text_submission is not None) and (st.session_state._text_submission.strip() != ""):
         
         # ID column for dataframe
         if st.session_state.submissions_df.empty:
@@ -70,7 +70,7 @@ def process_submission(container, text_submission):
 
         row = {
             'id': next_id, 
-            'content': text_submission, 
+            'content': st.session_state._text_submission, 
             'spam_tag': None
         }
 
@@ -160,7 +160,7 @@ def create_page():
     if st.session_state.get('_uploaded_file'):
     
         # Title
-        st.title('Text-to-Image Extraction')
+        st.title('Create Records (Text-to-Image Extraction)')
 
         # Container for notification  
         container = st.container()
@@ -220,7 +220,7 @@ def create_page():
         st.button(
             'Submit',
             on_click=process_submission,
-            args=[container, st.session_state._text_submission]
+            args=[container]
         )
 
     else:  
