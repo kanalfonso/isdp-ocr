@@ -1,7 +1,5 @@
 # note callback executes before script re-run when clicking on widget
-
 import streamlit as st
-import time
 import pandas as pd
 
 # crud pages
@@ -9,8 +7,6 @@ from pages.crud_pages.create_page import create_page
 from pages.crud_pages.read_page import read_page
 from pages.crud_pages.update_page import update_page
 from pages.crud_pages.delete_page import delete_page
-from pages.crud_pages.update_page_v2 import update_page_v2
-
 # helper funcs
 from utils.streamlit_utils import persist_key
 
@@ -43,8 +39,7 @@ def sidebar_ui():
         'Create': 0,
         'Read': 1,
         'Update': 2,
-        'Delete': 3,
-        'Update 2': 4
+        'Delete': 3
     }
 
     CRUD_OPTIONS = [option for option in CRUD_MAPPING.keys()]
@@ -93,9 +88,6 @@ def main():
 
         elif st.session_state._selected_crud_operation == 'Update':
             update_page()
-        
-        elif st.session_state._selected_crud_operation == 'Update 2':
-            update_page_v2()
         
         elif st.session_state._selected_crud_operation == 'Delete':
             delete_page()

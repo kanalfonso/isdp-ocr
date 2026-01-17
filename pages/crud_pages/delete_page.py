@@ -2,7 +2,14 @@ import streamlit as st
 
 ### Pop-up message when `Delete entry` has been clicked ### 
 @st.dialog('Confirm Deletion')
-def delete_ids_popup(_ids_to_delete):
+def delete_ids_popup():
+
+    st.session_state._ids_to_delete = st.session_state._edited_df.loc[
+        st.session_state._edited_df["to_delete"] == True,
+        "id"
+    ].tolist()
+
+
     st.write(
         f"Are you sure you want to delete the following entries, IDs: {st.session_state._ids_to_delete}? "
         "\n\nThis action **cannot be undone**."
@@ -14,7 +21,7 @@ def delete_ids_popup(_ids_to_delete):
         # Remove the passed id from the dataframe
         st.session_state.submissions_df = (
             st.session_state.submissions_df[
-                ~st.session_state.submissions_df["id"].isin(_ids_to_delete)
+                ~st.session_state.submissions_df["id"].isin(st.session_state._ids_to_delete)
             ]
         )
 
@@ -29,7 +36,6 @@ def delete_page():
     """
     st.title('Delete Records')
 
-
     container = st.container()
 
     if st.session_state.get('is_successful_delete') and st.session_state.get('_ids_to_delete'):
@@ -39,26 +45,26 @@ def delete_page():
         st.session_state.is_successful_delete = False
 
 
-    # Enter ID
-    st.multiselect(
-        "Input IDs", 
-        key='_ids_to_delete',
-        options=st.session_state.submissions_df["id"].tolist(),
-        placeholder="Select one or more IDs to delete"
+
+    submissions_df = st.session_state.submissions_df.copy()
+    submissions_df['to_delete'] = False
+
+    edited_df = st.data_editor(
+        submissions_df,
+        hide_index=True
     )
 
-
-    st.dataframe(st.session_state.submissions_df, hide_index=True)
+    st.session_state._edited_df = edited_df
 
     
     if st.button('Delete'):
 
-        if len(st.session_state._ids_to_delete) == 0:
-            container.error("⚠️ No IDs selected. Please choose **at least one ID** to delete.")
+        if st.session_state._edited_df['to_delete'].any():
+            delete_ids_popup()
 
+        # if no row selected to delete
         else:
-            # Redirects to pop-up message above
-            delete_ids_popup(st.session_state._ids_to_delete)
+            container.error("⚠️ No IDs selected. Please choose **at least one ID** to delete.")
 
 
 if __name__ == '__main__':

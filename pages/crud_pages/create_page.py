@@ -81,7 +81,7 @@ def process_submission(container):
         st.session_state.submissions_df = pd.concat([st.session_state.submissions_df, latest_submission], ignore_index=True)
 
         container.success(
-            "✅ Submission saved! Predict, edit, or delete it in the **Submissions** page."
+            "✅ Submission saved! Use other CRUD options to modify entries."
         )
 
 

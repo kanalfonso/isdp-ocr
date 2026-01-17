@@ -25,6 +25,11 @@ def predict_page():
 
     container = st.container()
 
+    container.info(
+        "ℹ️ Click the Predict button to perform batch prediction on all entries."
+        "\n\nPrediction time depends on how many entries you have."
+    )
+
     if len(st.session_state.submissions_df) > 0:
         st.dataframe(st.session_state.submissions_df, hide_index=True)
 
