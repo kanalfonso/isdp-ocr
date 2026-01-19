@@ -79,55 +79,18 @@ def main():
 
     ###### Main Page ######
     
-    if len(st.session_state.submissions_df) > 0:
-        if st.session_state._selected_crud_operation == 'Create':
-            create_page()
+    # if len(st.session_state.submissions_df) > 0:
+    if st.session_state._selected_crud_operation == 'Create':
+        create_page()
 
-        elif st.session_state._selected_crud_operation == 'Read':
-            read_page()
+    elif st.session_state._selected_crud_operation == 'Read':
+        read_page()
 
-        elif st.session_state._selected_crud_operation == 'Update':
-            update_page()
-        
-        elif st.session_state._selected_crud_operation == 'Delete':
-            delete_page()
-
-
-
-
-    # When there are no records in the session state df, show warning message
-    else:
-
-        if st.session_state._selected_crud_operation == 'Create':
-            create_page()
-
-        # Going to view any other crud operation: R, U or D
-        else: 
-            # container for notifications
-            container = st.container()
-
-            # When you delete all records uing `Delete All`
-            if st.session_state.get('is_successful_delete_all'):
-                st.session_state.is_successful_delete_all = False
-                container.warning(
-                    "All records have been deleted."
-                    "\n\nPlease add new records by selecting the **Create** Operation."
-                )
-
-            # When you delete the last record using multiselect
-            elif st.session_state.get('is_successful_delete'):
-                st.session_state.is_successful_delete = False
-                container.warning(
-                    f"Successfully deleted the record(s) with ID(s): {st.session_state._ids_to_delete}."
-                    "\n\nNo records remain. Please add new records by selecting the **Create** Operation."
-                )
-
-            
-            else:
-                container.warning(
-                    "No records found." 
-                    "\n\nPlease add new records by selecting the **Create** Operation."
-                )
+    elif st.session_state._selected_crud_operation == 'Update':
+        update_page()
+    
+    elif st.session_state._selected_crud_operation == 'Delete':
+        delete_page()
 
 
 

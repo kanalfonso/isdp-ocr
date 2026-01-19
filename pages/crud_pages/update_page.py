@@ -1,4 +1,6 @@
 import streamlit as st
+from pages.no_records_page import no_records_page
+
 
 @st.dialog("Confirm Update")
 def update_popup(edited_df):
@@ -29,8 +31,16 @@ def update_page():
         "\n\nThe **Submit Changes** button is only enabled when changes are detected."
     )
 
+    # Last action wasn't delete and table is empty
+    if st.session_state.submissions_df.empty:
+        no_records_page()
+        
+        # Need to end with `return` so won't load the empty table
+        return
+
+
     if st.session_state.get('is_successful_update'):
-        container.success('Successful edit')
+        container.success('✅ Changes saved successfully')
         st.session_state.is_successful_update = False
 
     data_df = st.session_state.submissions_df 

@@ -1,6 +1,8 @@
 import streamlit as st
 import time
 
+from pages.no_records_page import no_records_page 
+
 
 # backend
 def predict_entries(container, df):
@@ -9,7 +11,7 @@ def predict_entries(container, df):
     with status:
         with st.spinner("Predicting entries...", show_time=True):
             time.sleep(1)
-            df['spam_tag'] = 'P2P'
+            df['spam_tag'] = '?'
     
     # Show success inside the top container
     container.success("✅ Predictions successfully generated!")
@@ -30,23 +32,24 @@ def predict_page():
         "\n\nPrediction time depends on how many entries you have."
     )
 
-    if len(st.session_state.submissions_df) > 0:
-        st.dataframe(st.session_state.submissions_df, hide_index=True)
+
+    if st.session_state.submissions_df.empty:
+        no_records_page()
+        
+        # Need to end with `return` so won't load the empty table
+        return
 
 
-        st.button(
-            'Predict',
-            on_click=predict_entries,
-            args=(container, st.session_state.submissions_df)
-        )
+
+    st.dataframe(st.session_state.submissions_df, hide_index=True)
+
+
+    st.button(
+        'Predict',
+        on_click=predict_entries,
+        args=[container, st.session_state.submissions_df]
+    )
     
-    # No records
-    else: 
-        container.warning(
-            "No records detected." 
-            "\n\nCreate a new submission by going to the **Submissions** page and selecting selecting the **Create** Operation."
-        )
-
 
 if __name__ == '__main__':
     predict_page()

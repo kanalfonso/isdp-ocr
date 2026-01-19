@@ -24,7 +24,7 @@ def logout_option():
             st.rerun()  # Refresh the app
 
 
-if __name__ == '__page__':
+if __name__ == '__main__':
     try:
         # Ensure redirection after reloading
         if "email" and "credentials" not in st.session_state:  # Or check authentication state
