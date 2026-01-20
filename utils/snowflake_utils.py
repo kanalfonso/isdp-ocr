@@ -1,10 +1,11 @@
 # pip install snowflake-snowpark-python
 from snowflake.snowpark import Session
+import pandas as pd
 
 def create_sf_session(
-    user: str,
-    role: str,        
-    warehouse: str
+    user: str = 'alfonso.kan@globe.com.ph',
+    role: str = 'ROLE_AKAN',        
+    warehouse: str = 'CSSG_CDA_WH_GENERAL'
 ):
     """
     Creates a Snowflake Session based on the connection parameters passed
@@ -20,6 +21,31 @@ def create_sf_session(
     }
 
     return Session.builder.configs(connection_parameters).create()
+
+
+
+
+def upload_data_to_sf(
+    session: Session, 
+    df: pd.DataFrame, 
+    table_name="ISDP_OCR_SUBMISSIONS",
+    database="DB_SBX",
+    schema="SP_AKAN"
+):
+    """
+    Upload dataframe to Snowflake    
+    """
+
+    session.write_pandas(
+        df,
+        table_name=table_name,
+        database=database,
+        schema=schema
+    )
+
+
+
+
 
 
 def main():

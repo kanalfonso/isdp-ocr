@@ -2,6 +2,22 @@ import streamlit as st
 from pages.no_records_page import no_records_page
 import time
 
+from utils.snowflake_utils import create_sf_session, upload_data_to_sf
+
+
+@st.dialog("Confirming Upload")
+def submit_popup():
+    st.write(
+        "Are you sure you want to upload this table to Snowflake?"
+        "\n\nThis action **cannot be undone**."
+    )
+
+    if st.button("Confirm"):
+        st.session_state.confirm_sf_upload = True
+        st.rerun()
+
+
+
 def upload_to_sf_page():
     st.title('Upload to Snowflake')
 
@@ -32,8 +48,33 @@ def upload_to_sf_page():
             "ℹ️ Clicking **Submit** uploads your records to a dedicated Snowflake table."
             "\n\nThis action cannot be undone. Updates or deletions must be done directly in Snowflake."
         )
-
+        
         spinner_placeholder = st.empty()
+        
+        if st.session_state.get('confirm_sf_upload'):
+            # with spinner_placeholder.spinner("Creating Snowflake session..."):
+    
+            #     # Create session
+            #     session = create_sf_session()
+            #     time.sleep(2)
+
+            # with spinner_placeholder.spinner("Uploading data to Snowflake..."):
+                
+            #     # Upload data to snowflake and closes session afterwards
+            #     df_to_upload = st.session_state.submissions_df[['content', 'spam_tag']].copy()
+            #     df_to_upload.columns = df_to_upload.columns.str.upper()
+            #     upload_data_to_sf(session, df_to_upload)
+            #     time.sleep(2)
+
+            # with spinner_placeholder.spinner("Closing session..."):
+            #     # Close session
+            #     session.close()
+            #     time.sleep(2)
+
+
+            st.session_state.confirm_sf_upload = False
+            container.success("Submission uploaded to Snowflake!")
+
 
         # display dataframe
         st.dataframe(
@@ -42,10 +83,12 @@ def upload_to_sf_page():
         )
 
 
-        if st.button("Submit"):
-            with spinner_placeholder.spinner("Uploading data to Snowflake...."):
-                time.sleep(2)
-                container.success("Submission uploaded to Snowflake!")
+        st.button(
+            "Submit",
+            on_click=submit_popup
+        )
+                
 
 if __name__ == '__main__':
     upload_to_sf_page()
+
