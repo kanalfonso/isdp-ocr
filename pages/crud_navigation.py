@@ -64,7 +64,7 @@ def sidebar_ui():
         if st.session_state.get('selected_crud_operation') == 'Delete':
             st.divider()
 
-            if st.button('Delete All'):
+            if st.button('Delete All', disabled=True if st.session_state.submissions_df.empty else False):
                 delete_all()
 
 

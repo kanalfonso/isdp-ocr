@@ -24,21 +24,19 @@ def predict_page():
     UI when user chooses `Predict` as the selected CRUD operation
     """
     st.title('Predict Spam Type of Records')
-
+    
+    if st.session_state.submissions_df.empty:
+        no_records_page()
+        
+        # Need to end with `return` so won't load the empty table
+        return
+    
     container = st.container()
 
     container.info(
         "ℹ️ Click the Predict button to perform batch prediction on all entries."
         "\n\nPrediction time depends on how many entries you have."
     )
-
-
-    if st.session_state.submissions_df.empty:
-        no_records_page()
-        
-        # Need to end with `return` so won't load the empty table
-        return
-
 
 
     st.dataframe(st.session_state.submissions_df, hide_index=True)

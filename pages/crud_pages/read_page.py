@@ -8,16 +8,15 @@ def read_page():
     """
     st.title('Read Records')
 
-
-    st.info(
-        "ℹ️ This table is read-only. Choose a CRUD operation from the sidebar to create, update, delete, or predict records."
-    )
-
     if st.session_state.submissions_df.empty:
         no_records_page()
         
         # Need to end with `return` so won't load the empty table
         return
+    
+    st.info(
+        "ℹ️ This table is read-only. Choose a CRUD operation from the sidebar to create, update, delete, or predict records."
+    )
 
     # display dataframe if it has records
     st.dataframe(st.session_state.submissions_df, hide_index=True)

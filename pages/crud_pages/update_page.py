@@ -22,21 +22,20 @@ def update_page():
 
     st.title('Update Records')
 
-    container = st.container()
-
-
-    container.info(
-        "ℹ️ Double-click a cell to edit (ID fields are read-only). "
-        "\n\nPress **Enter** or click outside the cell to register changes. "
-        "\n\nThe **Submit Changes** button is only enabled when changes are detected."
-    )
-
     # Last action wasn't delete and table is empty
     if st.session_state.submissions_df.empty:
         no_records_page()
         
         # Need to end with `return` so won't load the empty table
         return
+    
+    container = st.container()
+
+    container.info(
+        "ℹ️ Double-click a cell to edit (ID fields are read-only). "
+        "\n\nPress **Enter** or click outside the cell to register changes. "
+        "\n\nThe **Submit Changes** button is only enabled when changes are detected."
+    )
 
 
     if st.session_state.get('is_successful_update'):

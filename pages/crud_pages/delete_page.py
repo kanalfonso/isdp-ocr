@@ -39,6 +39,21 @@ def delete_page():
 
     container = st.container()
 
+
+    # Last action wasn't delete and table is empty
+    if not st.session_state.get('is_successful_delete') and st.session_state.submissions_df.empty:
+        no_records_page()
+        
+        # Need to end with `return` so won't load the empty table
+        return
+
+    else:
+        container.info(
+            "ℹ️ Select records to delete using the checkboxes, or clear everything with **Delete All**."
+            "\n\nDeleted records cannot be recovered."
+        )
+
+
     # After delete and no records remain show this notification
     if st.session_state.get('is_successful_delete') and st.session_state.submissions_df.empty:
         st.session_state.is_successful_delete = False
@@ -50,13 +65,6 @@ def delete_page():
         # Need to end with `return` so won't load the empty table
         return
 
-
-    # Last action wasn't delete and table is empty
-    if st.session_state.submissions_df.empty:
-        no_records_page()
-        
-        # Need to end with `return` so won't load the empty table
-        return
 
 
     # When you delete all records uing `Delete All`

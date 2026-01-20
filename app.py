@@ -25,6 +25,7 @@ def main():
     user_access_page = st.Page('pages/user_access_page.py', title='User Access', icon='👨🏻‍💻')
     crud_page = st.Page('pages/crud_navigation.py', title='Submissions (Create, Read, Update, Delete)', icon='💾')
     predict_page = st.Page('pages/predict_page.py', title='Generate Spam Tag', icon='🤖')
+    upload_to_sf_page = st.Page('pages/upload_to_sf_page.py', title='Upload to Snowflake', icon='❄️')
     # connection_page = st.Page('pages/connection_page.py', title='Connect to Snowflake', icon='❄️')
     
     with open('config.yaml', "r") as f:
@@ -34,39 +35,41 @@ def main():
 
     ### LOGIN LOGIC ###
     # email whitelist logic
-    if "credentials" in st.session_state and st.session_state['email'] in config.get('email_whitelist', []):
+    # if "credentials" in st.session_state and st.session_state['email'] in config.get('email_whitelist', []):
 
-        pages = {
-            "Records": [
-                crud_page, 
-                predict_page
-            ],
+    #     pages = {
+    #         "Records": [
+    #             crud_page, 
+    #             predict_page,
+    #             upload_to_sf_page
+    #         ],
             
-            "Account": [
-                user_access_page, 
-                logout_page
-            ]
-        }
+    #         "Account": [
+    #             user_access_page, 
+    #             logout_page
+    #         ]
+    #     }
 
-        pg = st.navigation(pages)
+    #     pg = st.navigation(pages)
     
-    else:
-        pg = st.navigation([login_page])
+    # else:
+    #     pg = st.navigation([login_page])
     
     ### LOGIN LOGIC ###
 
 
 
 
-    # pg = st.navigation(
-    #     [
-    #         # connection_page, 
-    #         login_page,
-    #         crud_page, 
-    #         predict_page, 
-    #         logout_page
-    #     ]
-    # )
+    pg = st.navigation(
+        [
+            # connection_page, 
+            # login_page,
+            crud_page, 
+            predict_page, 
+            upload_to_sf_page,
+            logout_page
+        ]
+    )
     
     pg.run()
     
