@@ -25,7 +25,7 @@ def load_dataframe():
 
 
 # backend logic for refreshing data
-def get_new_data():
+def clear_cache():
     """
     Trigger data refresh to get up-to-date info
     """
@@ -39,23 +39,32 @@ def save_to_gsheets(df: pd.DataFrame):
     """
     Overwrite data to Gsheets 
     """
-    credentials = get_service_account_credentials(st.secrets['service_account_credentials'])
-    gc = gspread.authorize(credentials)
-    sh = gc.open_by_url("https://docs.google.com/spreadsheets/d/1Z4a8thj-ls1nR6f-IPeVsynhyjraKHqK-C586hDLEGo/edit?gid=0#gid=0")
-    worksheet = sh.get_worksheet(0)
+    # credentials = get_service_account_credentials(st.secrets['service_account_credentials'])
+    # gc = gspread.authorize(credentials)
+    # sh = gc.open_by_url("https://docs.google.com/spreadsheets/d/1Z4a8thj-ls1nR6f-IPeVsynhyjraKHqK-C586hDLEGo/edit?gid=0#gid=0")
+    # worksheet = sh.get_worksheet(0)
 
-    # clear all content
-    worksheet.clear()
+    # # clear all content
+    # worksheet.clear()
 
-    # update with values from streamlit
-    worksheet.update(
-        values=[df.columns.values.tolist()] + df.values.tolist(),
-        range_name="A1"
+    # # update with values from streamlit
+    # worksheet.update(
+    #     values=[df.columns.values.tolist()] + df.values.tolist(),
+    #     range_name="A1"
+    # )
+
+
+@st.dialog('Confirm Changes')
+def submit_popup(df):
+    st.write(
+        f"Are you sure you want to update the whitelist"
+        "\n\nThis action **cannot be undone**."
     )
 
-
-
-
+    if st.button('Submit'):
+        save_to_gsheets(df)
+        st.session_state.is_successful_whitelist_update = True
+        st.rerun()
 
 
 
@@ -81,18 +90,32 @@ def user_access_page():
             st.rerun()
 
 
+
+
     # ---- AFTER CLICK ----
     else:
 
         with st.sidebar:
             if st.button("Refresh Data"):
-                get_new_data()
+                clear_cache()
 
         st.title('Email Whitelist')
-        st.info('Freely add or remove emails from the whitelist. Once done click **Submit Changes** to push update.')
+        st.info('ℹ️ Freely add or remove emails from the whitelist. Once done click **Submit Changes** to push update.')
 
-        # load df - after cache refresh
-        
+        container = st.container()
+
+
+
+        if st.session_state.get('is_successful_whitelist_update'):
+            container.success("✅ Successfully updated the whitelist!")
+            st.session_state.is_successful_whitelist_update = False
+
+
+            # refresh to clear cache
+            clear_cache()
+
+
+        # API request to load latest dataframe after update
         whitelist_df = load_dataframe()
 
         
@@ -102,12 +125,8 @@ def user_access_page():
             num_rows='dynamic'
         )
 
-        st.button(
-            'Submit Changes',
-            on_click=save_to_gsheets,
-            args=[updated_whitelist_df]
-        )
-
+        if st.button('Submit Changes'):
+            submit_popup(updated_whitelist_df)
         
 
 

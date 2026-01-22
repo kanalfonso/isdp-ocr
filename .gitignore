@@ -4,3 +4,5 @@ sms_screenshot/
 __pycache__/
 .env
 config.yaml
+sms_spam_type_clf/
+demo/

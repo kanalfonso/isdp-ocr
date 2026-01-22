@@ -70,6 +70,7 @@ def process_submission(container):
 
         row = {
             'id': next_id, 
+            'sender': st.session_state._sender,
             'content': st.session_state._text_submission, 
             'spam_tag': None
         }
@@ -208,6 +209,11 @@ def create_page():
             # Stores parsed text to st.session_state._text_submission
             parse_image(container, img)
 
+        st.text_input(
+            key='_sender',
+            label='Sender',
+            value=None
+        )
 
         st.text_area(
             key='_text_submission',

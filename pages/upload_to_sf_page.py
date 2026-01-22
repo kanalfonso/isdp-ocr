@@ -52,28 +52,28 @@ def upload_to_sf_page():
         spinner_placeholder = st.empty()
         
         if st.session_state.get('confirm_sf_upload'):
-            # with spinner_placeholder.spinner("Creating Snowflake session..."):
+            with spinner_placeholder.spinner("Creating Snowflake session..."):
     
-            #     # Create session
-            #     session = create_sf_session()
-            #     time.sleep(2)
+                # Create session
+                session = create_sf_session()
+                time.sleep(2)
 
-            # with spinner_placeholder.spinner("Uploading data to Snowflake..."):
+            with spinner_placeholder.spinner("Uploading data to Snowflake..."):
                 
-            #     # Upload data to snowflake and closes session afterwards
-            #     df_to_upload = st.session_state.submissions_df[['content', 'spam_tag']].copy()
-            #     df_to_upload.columns = df_to_upload.columns.str.upper()
-            #     upload_data_to_sf(session, df_to_upload)
-            #     time.sleep(2)
+                # Upload data to snowflake and closes session afterwards
+                df_to_upload = st.session_state.submissions_df[['sender', 'content', 'spam_tag']].copy()
+                df_to_upload.columns = df_to_upload.columns.str.upper()
+                upload_data_to_sf(session, df_to_upload)
+                time.sleep(2)
 
-            # with spinner_placeholder.spinner("Closing session..."):
-            #     # Close session
-            #     session.close()
-            #     time.sleep(2)
+            with spinner_placeholder.spinner("Closing session..."):
+                # Close session
+                session.close()
+                time.sleep(2)
 
 
             st.session_state.confirm_sf_upload = False
-            container.success("Submission uploaded to Snowflake!")
+            container.success("✅ Submission uploaded to Snowflake!")
 
 
         # display dataframe
