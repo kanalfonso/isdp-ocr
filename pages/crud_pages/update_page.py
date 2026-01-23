@@ -77,12 +77,15 @@ def update_page():
         hide_index=True,
     )
 
-    # True if edited_df != submission_df
-    has_changes = not edited_df.equals(st.session_state.submissions_df)
+    # # True if edited_df != submission_df
+    # has_changes = not edited_df.equals(st.session_state.submissions_df)
 
     
-    if st.button("Submit Changes", disabled=not has_changes):
-        update_popup(edited_df)
+    if st.button("Submit Changes"):
+        if edited_df.equals(st.session_state.submissions_df):
+            container.error("⚠️ No changes detected. Please modify the data before submitting.")
+        else:
+            update_popup(edited_df)
 
 
 if __name__ == '__main__':

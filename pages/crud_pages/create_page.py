@@ -71,7 +71,7 @@ def process_submission(container):
         row = {
             'id': next_id, 
             'sender': st.session_state._sender,
-            'content': st.session_state._text_submission, 
+            'CONTENT': st.session_state._text_submission, 
             'spam_tag': None
         }
 
@@ -82,7 +82,7 @@ def process_submission(container):
         st.session_state.submissions_df = pd.concat([st.session_state.submissions_df, latest_submission], ignore_index=True)
 
         container.success(
-            "✅ Submission saved! Use other CRUD options to modify entries."
+            f"✅ Submission {next_id} saved successfully. You can use the other CRUD options to modify it."
         )
 
 

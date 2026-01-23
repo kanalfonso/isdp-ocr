@@ -6,3 +6,4 @@ __pycache__/
 config.yaml
 sms_spam_type_clf/
 demo/
+requirements/

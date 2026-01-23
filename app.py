@@ -73,7 +73,7 @@ def main():
     
     pg.run()
     
-    # st.write(st.session_state)
+    st.write(st.session_state)
 
 if __name__ == "__main__":
     main()
