@@ -1,5 +1,6 @@
 # for parse images -> TODO: refine helper func (AI must auto detect the fields declared)
 # for process submission -> # TODO: to reduce clutter, make this a helper func instead
+# TODO: add option in side bar to parse selected doc only (parse mode: batch vs solo)
 
 import streamlit as st
 import time
