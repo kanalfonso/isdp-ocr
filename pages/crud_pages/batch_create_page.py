@@ -1,3 +1,6 @@
+# for parse images -> TODO: refine helper func (AI must auto detect the fields declared)
+# for process submission -> # TODO: to reduce clutter, make this a helper func instead
+
 import streamlit as st
 import time
 from streamlit_cropper import st_cropper
@@ -8,6 +11,24 @@ import pandas as pd
 from utils.image_processing import pil_image_to_bytes, detect_text_from_bytes
 from utils.streamlit_utils import persist_create_text_fields
 
+
+# backend func
+def clear_content(container, current_doc_index):
+    """
+    Set st.session_state._text_submission to None
+    """
+    
+    # Clear both perm and temp keys
+    st.session_state.create_text_results[f'sender_{current_doc_index}'] = None
+    st.session_state[f'_sender_{current_doc_index}'] = None
+    
+    # Clear both perm and temp keys
+    st.session_state.create_text_results[f'text_submission_{current_doc_index}'] = None
+    st.session_state[f'_text_submission_{current_doc_index}'] = None
+    
+    # st.session_state._is_clear_content = True
+
+    container.success('✅ Text fields for the current document has been cleared!')
 
 
 # backend func
@@ -67,6 +88,97 @@ def parse_images(
 
 
 
+## work on this
+def validate_entry(
+        container, 
+        current_doc_index,
+        doc_index_to_name
+    ):
+    """
+    Form validation for the selected doc, shows error if blank entries
+    """
+
+    # Valid sender entry
+    if (st.session_state[f'_sender_{current_doc_index}'] is None) or (st.session_state[f'_sender_{current_doc_index}'].strip() == ""):
+        container.error('⚠️ Please ensure that the **Sender** text field is not **BLANK**!')   
+        return
+
+
+    if (st.session_state[f'_text_submission_{current_doc_index}'] is None) or (st.session_state[f'_text_submission_{current_doc_index}'].strip() == ""):
+        container.error('⚠️ Please ensure that the **Parsed Message** text field is not **BLANK**!')   
+        return
+
+
+    container.success(
+        f"✅ Document {current_doc_index + 1} - {doc_index_to_name[current_doc_index]} entry is valid.\n\n"
+        "Fields have been locked. To unlock, click **Unvalidate entry**"
+    )
+
+
+    # use hashlib?
+
+    # # Validation
+    # st.session_state[f'is_validated_doc_{current_doc_index}'] = True
+
+
+
+def process_submission():
+    """
+    Collate into a dataframe then submit entries
+    """
+
+    rows = {}
+
+
+    # TODO: to reduce clutter, make this a helper func instead
+    ##### Code for transforming dict to dataframe #####
+    for key, value in st.session_state.create_text_results.items():
+        field, idx = key.rsplit("_", 1)   # sender_0 → sender, 0
+        idx = int(idx)
+
+        rows.setdefault(idx, {})[field] = value
+
+    latest_submission = (
+        pd.DataFrame
+        .from_dict(rows, orient="index")
+        .reset_index(drop=True)
+    )
+
+
+    if st.session_state.submissions_df.empty:
+        start_id = 1
+    else:
+        start_id = st.session_state.submissions_df['id'].max() + 1
+
+    latest_submission.insert(0, 'id', range(start_id, start_id + len(latest_submission)))
+
+    ##### Code for transforming dict to dataframe #####
+
+
+
+
+    # List of new IDs added
+    new_ids = latest_submission['id'].tolist()
+
+    # get min and max IDs
+    st.session_state.latest_min_id, st.session_state.latest_max_id  = min(new_ids), max(new_ids)
+
+
+    # Save to submissions df
+    st.session_state.submissions_df = pd.concat([st.session_state.submissions_df, latest_submission], ignore_index=True)
+
+
+    # submission success
+    st.session_state.is_successful_create_submission = True
+
+
+    
+
+
+
+
+
+
 def sidebar_ui():
     """
     Wrapper on sidebar UI for the OCR Page
@@ -86,9 +198,20 @@ def sidebar_ui():
         if st.session_state.get('_uploaded_files'):
             # Parse Image button
             st.button(
-                'Parse Image',
+                'Parse All Documents',
                 key='_parse_image',
             )
+
+
+            st.divider()
+
+            st.button(
+                'Submit All',
+                key='_submit_all',
+                on_click=process_submission
+            )
+
+
 
 
 
@@ -101,7 +224,7 @@ def batch_create_page():
     ##### Main Page #####
 
     # maximum allowable files to upload
-    MAX_FILES = 2
+    MAX_FILES = 5
 
     st.title('Batch Upload')
 
@@ -119,6 +242,22 @@ def batch_create_page():
         )
 
         return
+
+    if st.session_state.get('is_successful_create_submission'):
+        container.success(
+            f"✅ Entries {st.session_state.latest_min_id}-{st.session_state.latest_max_id} have been saved.  You can use the other CRUD options to modify it."
+        )
+        
+        # turn back to false to close notif when rerun
+        st.session_state.is_successful_create_submission = False
+
+    
+    # # When you press on the `Clear Current Text Fields` button
+    # if st.session_state.get('_is_clear_content'):
+    #     # container.info('ℹ️ Text fields for the current document has been cleared!')
+    #     st.session_state['_is_clear_content'] = False
+
+
 
 
     # Submit an uploaded file
@@ -142,6 +281,7 @@ def batch_create_page():
             for idx in range(len(uploaded_files))
         }
         
+
         doc_index_options = [idx for idx in doc_index_to_name.keys()]
         
 
@@ -183,6 +323,12 @@ def batch_create_page():
 
         ##### FIELDS TO PARSE ##### 
 
+        is_validated = st.session_state.get(
+            f'is_validated_doc_{current_doc_index}',
+            False
+        )
+        
+
         st.text_input(
             key=f'_sender_{current_doc_index}',
 
@@ -190,6 +336,7 @@ def batch_create_page():
             # with this, manual edits get stored to persistent key as well
             on_change=persist_create_text_fields,  
             args=[f'sender_{current_doc_index}'],
+            disabled=is_validated,
             label='Sender',
         )
 
@@ -201,9 +348,24 @@ def batch_create_page():
             on_change=persist_create_text_fields,  
             args=[f'text_submission_{current_doc_index}'],
             label="Parsed Message",
+            disabled=is_validated,
             height=300,
             placeholder='Results will load here after `Parse Image` button is clicked.',
         )
+
+
+        st.button(
+            'Clear Current Text Fields',
+            key=f'_clear_contents_{current_doc_index}',
+            on_click=clear_content,
+            args=[container, current_doc_index]
+        )
+
+        # st.button(
+        #     "Validate & Lock Entry",
+        #     on_click=validate_entry,
+        #     args=[container, current_doc_index, doc_index_to_name]
+        # )
 
 
         ##### FIELDS TO PARSE #####
