@@ -4,6 +4,7 @@ import pandas as pd
 
 # crud pages
 from pages.crud_pages.create_page import create_page
+from pages.crud_pages.batch_create_page import batch_create_page
 from pages.crud_pages.read_page import read_page
 from pages.crud_pages.update_page import update_page
 from pages.crud_pages.delete_page import delete_page
@@ -39,7 +40,8 @@ def sidebar_ui():
         'Create': 0,
         'Read': 1,
         'Update': 2,
-        'Delete': 3
+        'Delete': 3,
+        'Batch Create': 4
     }
 
     CRUD_OPTIONS = [option for option in CRUD_MAPPING.keys()]
@@ -91,7 +93,8 @@ def main():
     
     elif st.session_state._selected_crud_operation == 'Delete':
         delete_page()
-
+    elif st.session_state._selected_crud_operation == 'Batch Create':
+        batch_create_page()
 
 
 if __name__ == '__main__':

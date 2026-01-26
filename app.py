@@ -17,6 +17,9 @@ def main():
     if 'submissions_df' not in st.session_state:
         st.session_state['submissions_df'] = pd.DataFrame()
 
+    if 'create_text_results' not in st.session_state:
+        st.session_state['create_text_results'] = {}
+
 
     st.set_page_config(layout="wide", page_title='ISDP OCR Tool', page_icon='💼')
     
@@ -35,41 +38,41 @@ def main():
 
     ## LOGIN LOGIC ###
     # email whitelist logic
-    if "credentials" in st.session_state and st.session_state['email'] in config.get('email_whitelist', []):
+    # if "credentials" in st.session_state and st.session_state['email'] in config.get('email_whitelist', []):
 
-        pages = {
-            "Records": [
-                crud_page, 
-                predict_page,
-                upload_to_sf_page
-            ],
+    #     pages = {
+    #         "Records": [
+    #             crud_page, 
+    #             predict_page,
+    #             upload_to_sf_page
+    #         ],
             
-            "Account": [
-                user_access_page, 
-                logout_page
-            ]
-        }
+    #         "Account": [
+    #             user_access_page, 
+    #             logout_page
+    #         ]
+    #     }
 
-        pg = st.navigation(pages)
+    #     pg = st.navigation(pages)
     
-    else:
-        pg = st.navigation([login_page])
+    # else:
+    #     pg = st.navigation([login_page])
     
     ## LOGIN LOGIC ###
 
 
 
 
-    # pg = st.navigation(
-    #     [
-    #         # connection_page, 
-    #         # login_page,
-    #         crud_page, 
-    #         predict_page, 
-    #         upload_to_sf_page,
-    #         logout_page
-    #     ]
-    # )
+    pg = st.navigation(
+        [
+            # connection_page, 
+            # login_page,
+            crud_page, 
+            predict_page, 
+            upload_to_sf_page,
+            logout_page
+        ]
+    )
     
     pg.run()
     

@@ -61,6 +61,10 @@ def detect_text_from_bytes(bytes):
     return "None"
 
 
+
+
+
+
 # # Replace 'PATH_TO_YOUR_IMAGE' with the path to the image file you want to analyze.
 # detect_text_from_path('sms_screenshot/image_2.png')
 
