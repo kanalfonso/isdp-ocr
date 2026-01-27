@@ -1,16 +1,22 @@
-# for parse images -> TODO: refine helper func (AI must auto detect the fields declared)
-# for process submission -> # TODO: to reduce clutter, make this a helper func instead
-# TODO: add option in side bar to parse selected doc only (parse mode: batch vs solo)
+# for parse images -> TODO: refine helper func (AI must auto detect the fields declared) 
+# for process submission -> # TODO: to reduce clutter, make this a helper func instead -> DONE
+# TODO: add option in side bar to parse selected doc only (parse mode: batch vs solo) 
+# TODO: use hashlib instead of relying on index as an identifier for the doc (this WILL BE USED FOR validating each button)
+
+
+# use filehash to distinguish between files
+
 
 import streamlit as st
 import time
 from streamlit_cropper import st_cropper
 from PIL import Image
 import pandas as pd
+import uuid
 
 # helper function
 from utils.image_processing import pil_image_to_bytes, detect_text_from_bytes
-from utils.streamlit_utils import persist_create_text_fields
+from utils.streamlit_utils import persist_create_text_fields, convert_create_text_results_to_df, convert_bytes_to_hash, storing_doc_metadata
 
 
 # backend func
@@ -50,6 +56,11 @@ def parse_images(
 
     progress_bar = status.progress(0, text="Starting processing...")
     
+
+    # for idx, uuid, file in enumerate(zip(st.session_state.doc_id_to_metadata.keys(), uploaded_files), start=0):
+
+
+    
     for idx, file in enumerate(uploaded_files, start=0):
         
         time.sleep(1)
@@ -65,6 +76,8 @@ def parse_images(
         # parsed_text = detect_text_from_bytes(img_bytes)
 
         # store permanently in create_text_results
+
+        ## TODO: replace this with uuid instead of idx
         st.session_state.create_text_results[f'sender_{idx}'] = f'sender for doc {idx}'
         st.session_state.create_text_results[f'text_submission_{idx}'] = f'parsed text for doc {idx}'
         # st.session_state.create_text_results[f'text_submission_{idx}'] = parsed_text
@@ -128,23 +141,8 @@ def process_submission():
     Collate into a dataframe then submit entries
     """
 
-    rows = {}
-
-
-    # TODO: to reduce clutter, make this a helper func instead
-    ##### Code for transforming dict to dataframe #####
-    for key, value in st.session_state.create_text_results.items():
-        field, idx = key.rsplit("_", 1)   # sender_0 → sender, 0
-        idx = int(idx)
-
-        rows.setdefault(idx, {})[field] = value
-
-    latest_submission = (
-        pd.DataFrame
-        .from_dict(rows, orient="index")
-        .reset_index(drop=True)
-    )
-
+    # Helper func that transforms dict to a dataframe
+    latest_submission = convert_create_text_results_to_df(st.session_state.create_text_results)
 
     if st.session_state.submissions_df.empty:
         start_id = 1
@@ -153,16 +151,12 @@ def process_submission():
 
     latest_submission.insert(0, 'id', range(start_id, start_id + len(latest_submission)))
 
-    ##### Code for transforming dict to dataframe #####
 
+    # # List of new IDs added
+    # new_ids = latest_submission['id'].tolist()
 
-
-
-    # List of new IDs added
-    new_ids = latest_submission['id'].tolist()
-
-    # get min and max IDs
-    st.session_state.latest_min_id, st.session_state.latest_max_id  = min(new_ids), max(new_ids)
+    # # get min and max IDs
+    # st.session_state.latest_min_id, st.session_state.latest_max_id  = min(new_ids), max(new_ids)
 
 
     # Save to submissions df
@@ -245,10 +239,10 @@ def batch_create_page():
         return
 
     if st.session_state.get('is_successful_create_submission'):
-        container.success(
-            f"✅ Entries {st.session_state.latest_min_id}-{st.session_state.latest_max_id} have been saved.  You can use the other CRUD options to modify it."
-        )
-        
+        # container.success(
+        #     f"✅ Entries {st.session_state.latest_min_id}-{st.session_state.latest_max_id} have been saved.  You can use the other CRUD options to modify it."
+        # )
+        container.success("Successful submission")
         # turn back to false to close notif when rerun
         st.session_state.is_successful_create_submission = False
 
@@ -276,39 +270,47 @@ def batch_create_page():
         uploaded_files = st.session_state.get('_uploaded_files')
         
 
-        # Transform uploaded_files into this dict => {doc_idx: doc_name}
-        doc_index_to_name = {
-            idx: uploaded_files[idx].name 
-            for idx in range(len(uploaded_files))
-        }
-        
+        doc_id_to_metadata = {}
 
-        doc_index_options = [idx for idx in doc_index_to_name.keys()]
+        for idx, file in enumerate(uploaded_files, start=0):
+            
+            # Converting UploadedFile -> Bytes -> Hash Digest
+            file_hash = convert_bytes_to_hash(file)
+
+            # Update values for st.session_state.doc_id_to_metadata
+            storing_doc_metadata(idx, file, file_hash, doc_id_to_metadata)
+
         
+        # overwrite session state value
+        st.session_state.doc_id_to_metadata = doc_id_to_metadata
+
+
+        # doc_index_options = [metadata['idx'] for metadata in doc_id_to_metadata.values()]
 
         # Dropdown to switch between uploaded files to display
-        current_doc_index = st.selectbox(
+        current_doc_id = st.selectbox(
             "Select document",
-            options=doc_index_options,
+            options=[id for id in doc_id_to_metadata.keys()],   # uuid
             index=0, # as default, will show first option
-            format_func=lambda idx: f"Document {idx+1} - {doc_index_to_name[idx]}"
+            format_func=lambda id: f"Document {doc_id_to_metadata[id]['idx']} - {doc_id_to_metadata[id]['file_name']}"
+            # format_func=lambda idx: f"Document {idx+1} - {doc_index_to_name[idx]}"
         )
 
 
         # re-fill text widgets (keys with `_` prefix) to the parse results of the associated document
         # the if-statements allow it to persist even when switching pages
-        if st.session_state.create_text_results.get(f'sender_{current_doc_index}'):
-            st.session_state[f'_sender_{current_doc_index}'] = st.session_state.create_text_results[f'sender_{current_doc_index}']
+        if st.session_state.create_text_results.get(f'sender_{current_doc_id}'):
+            st.session_state[f'_sender_{current_doc_id}'] = st.session_state.create_text_results[f'sender_{current_doc_id}']
 
 
-        if st.session_state.create_text_results.get(f'text_submission_{current_doc_index}'):
-            st.session_state[f'_text_submission_{current_doc_index}'] = st.session_state.create_text_results[f'text_submission_{current_doc_index}']
+        if st.session_state.create_text_results.get(f'text_submission_{current_doc_id}'):
+            st.session_state[f'_text_submission_{current_doc_id}'] = st.session_state.create_text_results[f'text_submission_{current_doc_index}']
 
 
 
 
 
-        current_file = uploaded_files[current_doc_index]
+        current_file = uploaded_files[doc_id_to_metadata[current_doc_id]['idx']]
 
 
         # Transform uploaded file to Image object
@@ -325,29 +327,29 @@ def batch_create_page():
         ##### FIELDS TO PARSE ##### 
 
         is_validated = st.session_state.get(
-            f'is_validated_doc_{current_doc_index}',
+            f'is_validated_doc_{current_doc_id}',
             False
         )
         
 
         st.text_input(
-            key=f'_sender_{current_doc_index}',
+            key=f'_sender_{current_doc_id}',
 
             # to persist value even when switching pages
             # with this, manual edits get stored to persistent key as well
             on_change=persist_create_text_fields,  
-            args=[f'sender_{current_doc_index}'],
+            args=[f'sender_{current_doc_id}'],
             disabled=is_validated,
             label='Sender',
         )
 
         st.text_area(
-            key=f'_text_submission_{current_doc_index}',
+            key=f'_text_submission_{current_doc_id}',
 
             # to persist value even when switching pages, 
             # with this, manual edits get stored to persistent key as well
             on_change=persist_create_text_fields,  
-            args=[f'text_submission_{current_doc_index}'],
+            args=[f'text_submission_{current_doc_id}'],
             label="Parsed Message",
             disabled=is_validated,
             height=300,
@@ -357,9 +359,9 @@ def batch_create_page():
 
         st.button(
             'Clear Current Text Fields',
-            key=f'_clear_contents_{current_doc_index}',
+            key=f'_clear_contents_{current_doc_id}',
             on_click=clear_content,
-            args=[container, current_doc_index]
+            args=[container, current_doc_id]
         )
 
         # st.button(
@@ -371,6 +373,9 @@ def batch_create_page():
 
         ##### FIELDS TO PARSE #####
 
+
+        # data = list(zip(doc_id_to_metadata.items(), uploaded_files))
+        # print(data)
     else:  
         container.info('ℹ️ Please upload an image file to proceed.')
     
