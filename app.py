@@ -21,8 +21,11 @@ def main():
         st.session_state['create_text_results'] = {}
 
 
-    if "doc_id_to_metadata" not in st.session_state:
-        st.session_state.doc_id_to_metadata = {}
+    if "file_id_to_metadata" not in st.session_state:
+        st.session_state.file_id_to_metadata = {}
+
+    if "create_text_results" not in st.session_state:
+        st.session_state.create_text_results = {}
 
 
     st.set_page_config(layout="wide", page_title='ISDP OCR Tool', page_icon='💼')
