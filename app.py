@@ -80,6 +80,11 @@ def main():
             logout_page
         ]
     )
+
+    if pg != crud_page:
+        st.session_state.create_text_results = {}
+        st.session_state.file_id_to_metadata = {}
+    
     
     pg.run()
     

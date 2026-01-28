@@ -4,194 +4,35 @@
 # TODO: let field identifiers be suffixed by file_id (this WILL BE USED FOR validating each button) -> DONE
 # TODO: fix validation buttons -> DONE
 # TODO: Add mechanic where each doc needs to be validated before proceeding with submission -> DONE
-
-
-# use filehash to distinguish between files
-
+# TODO: create a selected page parse only
 
 import streamlit as st
-import time
 from PIL import Image
-import pandas as pd
 
-# helper function
-from utils.image_processing import pil_image_to_bytes, detect_text_from_bytes
-from utils.streamlit_utils import persist_create_text_fields, convert_create_text_results_to_df
-
-
-# backend func
-def clear_content(container, current_file_id):
-    """
-    Set st.session_state._text_submission to None
-    """
+# helpers for this page
+from utils.streamlit.create_page_helpers import (
+    persist_create_text_fields, 
     
-    # Clear both perm and temp keys
-    st.session_state.create_text_results[f'sender_{current_file_id}'] = None
-    st.session_state[f'_sender_{current_file_id}'] = None
+    # On-click `Parse All Documents`
+    parse_images,
+
+    # Checks if all docs validated to unlock submit btn
+    all_docs_validated, 
     
-    # Clear both perm and temp keys
-    st.session_state.create_text_results[f'text_submission_{current_file_id}'] = None
-    st.session_state[f'_text_submission_{current_file_id}'] = None
-    
-    # st.session_state._is_clear_content = True
+    # On-click `Unlock Entry` btn 
+    unlock_entry, 
 
-    container.success('✅ Text fields for the current document has been cleared!')
+    # On-click `Validate & Lock Entry` btw
+    validate_entry,
 
 
-# backend func
-def parse_images(
-        container: st.delta_generator.DeltaGenerator, 
-        uploaded_files: list
-        
-    ) -> str:
-    """
-    Parse image by passing image as bytes
+    # On-click `Clear content` btn 
+    clear_content,
 
-    Notifies image has been successfully parsed 
-    Stores results to `_text_submission` in session state
-    """
-    status = container.empty()
+    # On-click `Submit All` btn
+    process_submission
+)
 
-    total_files = len(uploaded_files)
-
-    progress_bar = status.progress(0, text="Starting processing...")
-
-
-
-    for file_id in st.session_state.file_id_to_metadata.keys():
-
-        idx, file = st.session_state.file_id_to_metadata[file_id]['idx'], st.session_state.file_id_to_metadata[file_id]['UploadedFile']
-
-        time.sleep(1)
-
-        # convert to Image object
-        img_file = Image.open(file)
-        
-        # convert to bytes
-        img_bytes = pil_image_to_bytes(img_file)
-
-        # Image-to-text func using Gemini (comment for now to save on credits)
-        # TODO: refine helper func (AI must auto detect the fields declared)
-        # parsed_text = detect_text_from_bytes(img_bytes)
-
-        # store permanently in create_text_results
-
-        ## TODO: replace this with uuid instead of idx
-        st.session_state.create_text_results[f'sender_{file_id}'] = f'sender for doc {file_id}'
-        st.session_state.create_text_results[f'text_submission_{file_id}'] = f'parsed text for doc {file_id}'
-        # st.session_state.create_text_results[f'text_submission_{idx}'] = parsed_text
-
-
-        # start at 1
-        progress = (idx) / total_files
-        
-        progress_bar.progress(
-            progress,
-            text=f'Processing file {idx} out of {total_files}'
-        )
-
-
-    if (idx) == total_files:
-        time.sleep(1)  # allow UI to render final state
-    
-
-    status.success("✅ All files processed successfully!")
-
-
-
-
-
-## work on this
-def validate_entry(
-        container, 
-        current_file_id
-    ):
-    """
-    Form validation for the selected doc, shows error if blank entries
-    """
-
-    # Valid sender entry
-    if (st.session_state[f'_sender_{current_file_id}'] is None) or (st.session_state[f'_sender_{current_file_id}'].strip() == ""):
-        container.error('⚠️ Please ensure that the **Sender** text field is not **BLANK**!')   
-        return
-
-
-    if (st.session_state[f'_text_submission_{current_file_id}'] is None) or (st.session_state[f'_text_submission_{current_file_id}'].strip() == ""):
-        container.error('⚠️ Please ensure that the **Parsed Message** text field is not **BLANK**!')   
-        return
-
-
-    container.success(
-        f"✅ Document {st.session_state.file_id_to_metadata[current_file_id]['idx']} - {st.session_state.file_id_to_metadata[current_file_id]['file_name']} entry is valid.\n\n"
-        "Fields have been locked. To unlock, click **Unvalidate entry**"
-    )
-
-    st.session_state[f'is_validated_doc_{current_file_id}'] = True
-
-
-def unlock_entry(
-        container, 
-        current_file_id
-    ):
-    """
-    Unlock fields
-    """
-
-    container.info(
-        'ℹ️ Fields have been unlocked. Please lock to process submission.'
-    )
-
-    st.session_state[f'is_validated_doc_{current_file_id}'] = False
-
-
-def process_submission():
-    """
-    Collate into a dataframe then submit entries
-    """
-
-    # Helper func that transforms dict to a dataframe
-    latest_submission = convert_create_text_results_to_df(st.session_state.create_text_results)
-    
-    if st.session_state.submissions_df.empty:
-        start_id = 1
-    else:
-        start_id = st.session_state.submissions_df['id'].max() + 1
-
-    latest_submission.insert(0, 'id', range(start_id, start_id + len(latest_submission)))
-
-
-    # List of new IDs added
-    new_ids = latest_submission['id'].tolist()
-
-    # get min and max IDs
-    st.session_state.latest_min_id, st.session_state.latest_max_id  = min(new_ids), max(new_ids)
-
-
-    # Save to submissions df
-    st.session_state.submissions_df = pd.concat([st.session_state.submissions_df, latest_submission], ignore_index=True)
-
-
-    # submission success
-    st.session_state.is_successful_create_submission = True
-
-
-    
-
-
-def all_docs_validated(file_id_to_metadata: dict) -> bool:
-    """
-    Returns True if ALL uploaded docs are validated
-    """
-
-    # # No documents meaning NOT validated
-    # if not file_id_to_metadata:
-    #     return False
-    
-
-    for file_id in file_id_to_metadata.keys():
-        if not st.session_state.get(f'is_validated_doc_{file_id}', False):
-            return False
-    return True
 
 
 
@@ -225,7 +66,7 @@ def sidebar_ui(total_files_uploaded):
 
             st.write(
                 f"Documents validated: "
-                f"{sum(st.session_state.get(f'is_validated_doc_{fid}', False) for fid in st.session_state.file_id_to_metadata)}"
+                f"{sum(st.session_state.get(f'is_validated_doc_{file_id}', False) for file_id in st.session_state.file_id_to_metadata)}"
                 f" / {total_files_uploaded}"
             )
 
@@ -355,10 +196,14 @@ def batch_create_page():
         # Transform uploaded file to Image object
         img = Image.open(current_file)
 
+        col1, col2 = st.columns([1, 1])
+
 
 
         # Display image file - only one at a time
-        st.image(img)
+        with col1:
+            st.subheader("Image")
+            st.image(img)
 
 
 
@@ -370,73 +215,65 @@ def batch_create_page():
             False
         )
         
+        with col2:
+            st.subheader('Fields')
+            st.text_input(
+                key=f'_sender_{current_file_id}',
 
-        st.text_input(
-            key=f'_sender_{current_file_id}',
+                # to persist value even when switching pages
+                # with this, manual edits get stored to persistent key as well
+                on_change=persist_create_text_fields,  
+                args=[f'sender_{current_file_id}'],
+                disabled=is_validated,
+                label='Sender',
+            )
 
-            # to persist value even when switching pages
-            # with this, manual edits get stored to persistent key as well
-            on_change=persist_create_text_fields,  
-            args=[f'sender_{current_file_id}'],
-            disabled=is_validated,
-            label='Sender',
-        )
+            st.text_area(
+                key=f'_text_submission_{current_file_id}',
 
-        st.text_area(
-            key=f'_text_submission_{current_file_id}',
-
-            # to persist value even when switching pages, 
-            # with this, manual edits get stored to persistent key as well
-            on_change=persist_create_text_fields,  
-            args=[f'text_submission_{current_file_id}'],
-            label="Parsed Message",
-            disabled=is_validated,
-            height=300,
-            placeholder='Results will load here after `Parse Image` button is clicked.',
-        )
-
-
-        st.button(
-            'Clear Current Text Fields',
-            key=f'_clear_contents_{current_file_id}',
-            on_click=clear_content,
-            args=[container, current_file_id]
-        )
-
-        if is_validated:
-            st.button(
-                "Unlock Entry",
-                on_click=unlock_entry,
-                args=[container, current_file_id]
+                # to persist value even when switching pages, 
+                # with this, manual edits get stored to persistent key as well
+                on_change=persist_create_text_fields,  
+                args=[f'text_submission_{current_file_id}'],
+                label="Parsed Message",
+                disabled=is_validated,
+                height=300,
+                placeholder='Results will load here after `Parse Image` button is clicked.',
             )
 
 
-        else:
             st.button(
-                "Validate & Lock Entry",
-                on_click=validate_entry,
+                'Clear Current Text Fields',
+                key=f'_clear_contents_{current_file_id}',
+                on_click=clear_content,
                 args=[container, current_file_id]
             )
+
+            if is_validated:
+                st.button(
+                    "Unlock Entry",
+                    on_click=unlock_entry,
+                    args=[container, current_file_id]
+                )
+
+
+            else:
+                st.button(
+                    "Validate & Lock Entry",
+                    on_click=validate_entry,
+                    args=[container, current_file_id]
+                )
 
 
         ##### FIELDS TO PARSE #####
 
-
-        # data = list(zip(doc_id_to_metadata.items(), uploaded_files))
-        # print(data)
-
     else:  
-        container.info('ℹ️ Please upload an image file to proceed.')
+        container.info('ℹ️ Please upload images to proceed.')
         
         # reset to blank
         st.session_state.create_text_results = {}
         st.session_state.file_id_to_metadata = {}
     
 
-
-
-
 if __name__ == '__main__':
     batch_create_page()
-
-    

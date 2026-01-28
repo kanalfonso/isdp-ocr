@@ -3,13 +3,13 @@ import streamlit as st
 import pandas as pd
 
 # crud pages
-from pages.crud_pages.create_page import create_page
 from pages.crud_pages.batch_create_page import batch_create_page
 from pages.crud_pages.read_page import read_page
 from pages.crud_pages.update_page import update_page
 from pages.crud_pages.delete_page import delete_page
+
 # helper funcs
-from utils.streamlit_utils import persist_key
+from utils.streamlit.general_helpers import persist_key
 
 
 
@@ -40,8 +40,7 @@ def sidebar_ui():
         'Create': 0,
         'Read': 1,
         'Update': 2,
-        'Delete': 3,
-        'Batch Create': 4
+        'Delete': 3
     }
 
     CRUD_OPTIONS = [option for option in CRUD_MAPPING.keys()]
@@ -83,7 +82,7 @@ def main():
     
     # if len(st.session_state.submissions_df) > 0:
     if st.session_state._selected_crud_operation == 'Create':
-        create_page()
+        batch_create_page()
 
     elif st.session_state._selected_crud_operation == 'Read':
         read_page()
@@ -93,8 +92,12 @@ def main():
     
     elif st.session_state._selected_crud_operation == 'Delete':
         delete_page()
-    elif st.session_state._selected_crud_operation == 'Batch Create':
-        batch_create_page()
+
+
+    # TODO: if page not in batch_create set file_id_to_metadata and create_text_results to {}
+    if st.session_state._selected_crud_operation != 'Create':
+        st.session_state.create_text_results = {}
+        st.session_state.file_id_to_metadata = {}
 
 
 if __name__ == '__main__':
