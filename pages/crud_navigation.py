@@ -9,7 +9,7 @@ from pages.crud_pages.update_page import update_page
 from pages.crud_pages.delete_page import delete_page
 
 # helper funcs
-from utils.streamlit.general_helpers import persist_key
+from utils.streamlit.general_helpers import persist_key, load_config
 
 
 
@@ -70,7 +70,7 @@ def sidebar_ui():
 
 
 
-def main():
+def main(MAX_FILES: int, ACCEPTED_IMAGE_FILE_TYPES: list, COLUMN_CONFIG: dict):
 
     ###### Sidebar ######
     sidebar_ui()
@@ -82,16 +82,16 @@ def main():
     
     # if len(st.session_state.submissions_df) > 0:
     if st.session_state._selected_crud_operation == 'Create':
-        batch_create_page()
+        batch_create_page(MAX_FILES, ACCEPTED_IMAGE_FILE_TYPES)
 
     elif st.session_state._selected_crud_operation == 'Read':
-        read_page()
+        read_page(COLUMN_CONFIG)
 
     elif st.session_state._selected_crud_operation == 'Update':
         update_page()
     
     elif st.session_state._selected_crud_operation == 'Delete':
-        delete_page()
+        delete_page(COLUMN_CONFIG)
 
 
     # TODO: if page not in batch_create set file_id_to_metadata and create_text_results to {}
@@ -101,4 +101,9 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    config = load_config()
+
+    MAX_FILES = config.get('max_files')
+    ACCEPTED_IMAGE_FILE_TYPES = config.get('accepted_image_file_types')
+    COLUMN_CONFIG = config.get('column_config')
+    main(MAX_FILES, ACCEPTED_IMAGE_FILE_TYPES, COLUMN_CONFIG)

@@ -3,12 +3,15 @@
 # TODO: let field identifiers be suffixed by file_id (this WILL BE USED FOR validating each button) -> DONE
 # TODO: fix validation buttons -> DONE
 # TODO: Add mechanic where each doc needs to be validated before proceeding with submission -> DONE
-# TODO: refine helper func (AI must auto detect the fields declared) 
-# TODO: Read and display pdf files as well
+# TODO #3: refine helper func (AI must auto detect the fields declared) 
+# TODO #2: Read and display pdf files as well   
+# TODO #1: Add email and date on submission -> DONE
 
 import streamlit as st
 from PIL import Image
 from streamlit_pdf_viewer import pdf_viewer
+from utils.streamlit.general_helpers import load_config
+
 
 # helpers for this page
 from utils.streamlit.create_page_helpers import (
@@ -94,7 +97,7 @@ def sidebar_ui(total_files_uploaded):
 
 
 
-def batch_create_page():
+def batch_create_page(MAX_FILES: int, ACCEPTED_IMAGE_FILE_TYPES: list):
 
     # uploaded files stored in a LIST
     uploaded_files = st.session_state.get('_uploaded_files') or []
@@ -118,13 +121,9 @@ def batch_create_page():
 
 
     ##### Main Page #####
-
-    # maximum allowable files to upload
-    MAX_FILES = 5
-    IMAGE_FILE_TYPES = ['image/png', 'image/jpeg', 'image/jpg']
     
 
-    st.title('Batch Upload')
+    st.title('Create Records')
 
     # Container for notif
     container = st.container()
@@ -230,7 +229,7 @@ def batch_create_page():
             st.subheader("Image")
             
             # Transform uploaded file to Image object
-            if current_file.type in IMAGE_FILE_TYPES:
+            if current_file.type in ACCEPTED_IMAGE_FILE_TYPES:
                 img = Image.open(current_file)
                 st.image(img)
             
@@ -308,4 +307,9 @@ def batch_create_page():
     
 
 if __name__ == '__main__':
-    batch_create_page()
+    config = load_config()
+
+    MAX_FILES = config.get('max_files')
+    ACCEPTED_IMAGE_FILE_TYPES = config.get('accepted_image_file_types')
+
+    batch_create_page(MAX_FILES, ACCEPTED_IMAGE_FILE_TYPES)

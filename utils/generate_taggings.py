@@ -35,7 +35,7 @@ SMS_SPAM_TYPE_CLF_PATH = 'models/sms_spam_type_clf.pkl'
 def step_1(spamshield_df):
     # print("\nStep 1: Removing no record rows / no record indeces....")
 
-    condition_1 = spamshield_df['CONTENT'].str.strip().str.lower() == 'no record'
+    condition_1 = spamshield_df['text_submission'].str.strip().str.lower() == 'no record'
     # condition_2 = raw_holdout_df['Campaign Key'].str.strip().str.lower() == 'no record'
     complete_records_spamshield_df = spamshield_df[~(condition_1)].copy()
 
@@ -51,7 +51,7 @@ def step_1(spamshield_df):
 
 def step_2(complete_records_spamshield_df):
     # print("\nStep 2: Generating spam code features....")
-    spamcode_df = SpamCodeModelFrame(complete_records_spamshield_df, raw_text_col_name='CONTENT')
+    spamcode_df = SpamCodeModelFrame(complete_records_spamshield_df, raw_text_col_name='text_submission')
     display(spamcode_df.apply_features())
 
     return spamcode_df
@@ -97,7 +97,7 @@ def step_3(spamcode_df):
 ############## STEP 4 ##############
 def step_4(spam_code_modeling_df, X):
     # print("\nStep 4: Determining spam code prediction....")
-    df1 = spam_code_modeling_df[['CONTENT', 'REGEX_SPAM', 'HAS_CJK', 'HAS_IMSI_STR', 'HAS_URL']]
+    df1 = spam_code_modeling_df[['text_submission', 'REGEX_SPAM', 'HAS_CJK', 'HAS_IMSI_STR', 'HAS_URL']]
     df2 = X[['IS_SPAM_CODE_PRED']]
 
     spam_code_eval_df = pd.concat([df1, df2], axis=1)
@@ -145,12 +145,12 @@ def step_5(sms_no_spamcodes_df):
 
     filtered_sms_no_spamcodes_df = sms_no_spamcodes_df.copy()
 
-    text_cleaning_pipeline = TextPreprocessor(filtered_sms_no_spamcodes_df, raw_text_col_name='CONTENT')
+    text_cleaning_pipeline = TextPreprocessor(filtered_sms_no_spamcodes_df, raw_text_col_name='text_submission')
     cleaned_sms_no_spamcodes_df = text_cleaning_pipeline.clean_raw_text()
 
     # if text_final is NaN, fill with raw_text instead 
     cleaned_sms_no_spamcodes_df['TEXT_FINAL'] = cleaned_sms_no_spamcodes_df['TEXT_FINAL']\
-                                                    .fillna(cleaned_sms_no_spamcodes_df['CONTENT'])
+                                                    .fillna(cleaned_sms_no_spamcodes_df['text_submission'])
 
 
     only_url_str_masking = cleaned_sms_no_spamcodes_df['CLEANED_URL_STR'].str.strip() == 'url'
@@ -283,31 +283,31 @@ def pipeline():
         {
             'id': 1,
             'sender': 'Juan',
-            'CONTENT': 'Your loan has been approved. Click the link to proceed.',
+            'text_submission': 'Your loan has been approved. Click the link to proceed.',
             'spam_tag': 'LOAN/SCAM/SPAM'
         },
         {
             'id': 2,
             'sender': 'Maya',
-            'CONTENT': 'Congratulations! You won a cash prize. Reply YES to claim.',
+            'text_submission': 'Congratulations! You won a cash prize. Reply YES to claim.',
             'spam_tag': 'SCAM/SPAM'
         },
         {
             'id': 3,
             'sender': 'BankPH',
-            'CONTENT': 'Reminder: Your credit card payment is due tomorrow.',
+            'text_submission': 'Reminder: Your credit card payment is due tomorrow.',
             'spam_tag': 'LEGIT'
         },
         {
             'id': 4,
             'sender': 'Unknown',
-            'CONTENT': 'Limited offer! Get instant cash with no requirements.',
+            'text_submission': 'Limited offer! Get instant cash with no requirements.',
             'spam_tag': 'LOAN/SPAM'
         },
         {
             'id': 5,
             'sender': 'Globe',
-            'CONTENT': 'Your data promo will expire today. Register now.',
+            'text_submission': 'Your data promo will expire today. Register now.',
             'spam_tag': 'LEGIT'
         }
     ]

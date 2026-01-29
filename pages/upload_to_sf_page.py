@@ -1,9 +1,12 @@
 import streamlit as st
 from pages.no_records_page import no_records_page
 import time
+import yaml
 
 from utils.snowflake_utils import create_sf_session, upload_data_to_sf
 
+# helper funcs
+from utils.streamlit.general_helpers import load_config
 
 @st.dialog("Confirming Upload")
 def submit_popup():
@@ -18,7 +21,7 @@ def submit_popup():
 
 
 
-def upload_to_sf_page():
+def upload_to_sf_page(COLUMN_CONFIG):
     st.title('Upload to Snowflake')
 
     # Last action wasn't delete and table is empty
@@ -37,6 +40,7 @@ def upload_to_sf_page():
 
         st.dataframe(
             st.session_state.submissions_df,
+            column_config=COLUMN_CONFIG,
             hide_index=True
         )
 
@@ -84,6 +88,7 @@ def upload_to_sf_page():
         # display dataframe
         st.dataframe(
             st.session_state.submissions_df,
+            column_config=COLUMN_CONFIG,
             hide_index=True
         )
 
@@ -95,5 +100,9 @@ def upload_to_sf_page():
                 
 
 if __name__ == '__main__':
-    upload_to_sf_page()
+    config = load_config()
+
+    COLUMN_CONFIG = config.get('column_config')
+
+    upload_to_sf_page(COLUMN_CONFIG)
 

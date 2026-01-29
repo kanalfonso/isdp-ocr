@@ -5,31 +5,13 @@ from PIL import Image
 from utils.image_processing import pil_image_to_bytes, detect_text_from_bytes
 
 
+from datetime import datetime
+
+
+
 def persist_create_text_fields(key):
     st.session_state.create_text_results[key] = st.session_state['_' + key] 
 
-
-
-
-def convert_create_text_results_to_df(create_text_results: dict):
-    """
-    Pass `create_text_results` dict to return an equivalent dataframe 
-    """
-    rows = {}
-
-    for key, value in create_text_results.items():
-        field, file_id = key.rsplit("_", 1)   # sender_0 → sender, 0        
-
-        rows.setdefault(file_id, {})[field] = value
-
-    latest_submission = (
-        pd.DataFrame
-        .from_dict(rows, orient="index")
-        .reset_index(drop=True)
-    )
-
-
-    return latest_submission
 
 
 def all_docs_validated(file_id_to_metadata: dict) -> bool:
@@ -89,7 +71,7 @@ def validate_entry(
 
     container.success(
         f"✅ Document {st.session_state.file_id_to_metadata[current_file_id]['idx']} - {st.session_state.file_id_to_metadata[current_file_id]['file_name']} entry is valid.\n\n"
-        "Fields have been locked. To unlock, click **Unvalidate entry**"
+        "Fields have been locked. To unlock, click **Unlock entry**"
     )
 
     st.session_state[f'is_validated_doc_{current_file_id}'] = True
@@ -168,6 +150,30 @@ def parse_documents(
 
 
 
+
+def convert_create_text_results_to_df(create_text_results: dict) -> pd.DataFrame:
+    """
+    Pass `create_text_results` dict to return an equivalent dataframe
+
+    Used by process_submission func
+    """
+    rows = {}
+
+    for key, value in create_text_results.items():
+        field, file_id = key.rsplit("_", 1)   # sender_0 → sender, 0        
+
+        rows.setdefault(file_id, {})[field] = value
+
+    latest_submission = (
+        pd.DataFrame
+        .from_dict(rows, orient="index")
+        .reset_index(drop=True)
+    )
+
+
+    return latest_submission
+
+
 def process_submission():
     """
     Collate into a dataframe then submit entries
@@ -184,21 +190,25 @@ def process_submission():
     latest_submission.insert(0, 'id', range(start_id, start_id + len(latest_submission)))
 
 
-    ### TODO: temporary workaround, fix in code for spam_tag and CONTENT
-    # add col for spam_tag
+    # Add col for spam_tag
     latest_submission['spam_tag'] = None
 
-    # rename text_submission to CONTENT
-    latest_submission.rename(columns={'text_submission': 'CONTENT'}, inplace=True)
+    # Add col for email
+    latest_submission['email'] = st.session_state.email
+
+    # Add col for date submitted
+    dt_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    latest_submission['submission_time'] = dt_str
 
 
+    COL_ORDER = ['id', 'email', 'submission_time', 'sender', 'text_submission', 'spam_tag'] 
+    
+    # Reorder columns
+    latest_submission = latest_submission[COL_ORDER]
 
-
-
-    # List of new IDs added
-    new_ids = latest_submission['id'].tolist()
 
     # get min and max IDs
+    new_ids = latest_submission['id'].tolist()
     st.session_state.latest_min_id, st.session_state.latest_max_id  = min(new_ids), max(new_ids)
 
 

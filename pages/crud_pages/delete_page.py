@@ -1,6 +1,9 @@
 import streamlit as st
 from pages.no_records_page import no_records_page
 
+# helper funcs
+from utils.streamlit.general_helpers import persist_key, load_config
+
 ### Pop-up message when `Delete entry` has been clicked ### 
 @st.dialog('Confirm Deletion')
 def delete_ids_popup():
@@ -31,7 +34,7 @@ def delete_ids_popup():
 
 
 
-def delete_page():
+def delete_page(COLUMN_CONFIG):
     """
     UI when user chooses `Delete` as the selected CRUD operation
     """
@@ -96,6 +99,7 @@ def delete_page():
 
     edited_df = st.data_editor(
         submissions_df,
+        column_config=COLUMN_CONFIG,
         hide_index=True
     )
 
@@ -117,4 +121,8 @@ def delete_page():
 
 
 if __name__ == '__main__':
-    delete_page()
+    config = load_config()
+
+    COLUMN_CONFIG = config.get('column_config')
+
+    delete_page(COLUMN_CONFIG)

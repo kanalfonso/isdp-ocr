@@ -1,6 +1,9 @@
 import streamlit as st
 from pages.no_records_page import no_records_page
 
+# helper funcs
+from utils.streamlit.general_helpers import load_config
+
 
 @st.dialog("Confirm Update")
 def update_popup(edited_df):
@@ -16,6 +19,8 @@ def update_popup(edited_df):
 
         st.session_state.is_successful_update = True
         st.rerun()
+
+
 
 
 def update_page():
@@ -44,38 +49,49 @@ def update_page():
 
     data_df = st.session_state.submissions_df 
 
+    COLUMN_CONFIG ={
+        "id": st.column_config.TextColumn(
+                    label="ID", # display column name
+                    disabled=True
+        ),
+
+        "email": st.column_config.TextColumn(
+            label="Email", # display column name
+            disabled=True
+        ),
+
+        "submission_time": st.column_config.TextColumn(
+            label="Submission Time", # display column name
+            disabled=True
+        ),
+
+        "sender": st.column_config.TextColumn(
+            label="Sender", # display column name
+            disabled=False
+        ),
+
+        "text_submission": st.column_config.TextColumn(
+            label="Content", # display column name
+            disabled=False
+        ),
+
+        "spam_tag": st.column_config.SelectboxColumn(
+            label="Spam Tag", # display column name
+            disabled=False,
+            options=[
+                "LOAN/SCAM/SPAM",
+                "P2P",
+                "COMMERCIAL",
+            ],
+        )
+    }
 
     edited_df = st.data_editor(
         data_df,
-        column_config={
-            
-            # keys are col names
-            "id": st.column_config.TextColumn(
-                label="ID", # display column name
-                disabled=True
-            ),
-
-            "content": st.column_config.TextColumn(
-                label="Content", 
-            ),
-
-            "spam_tag": st.column_config.SelectboxColumn(
-                label="Spam Tag",
-                # help="The category of the app",
-                # width="medium",
-                options=[
-                    "LOAN/SCAM/SPAM",
-                    "P2P",
-                    "COMMERCIAL",
-                ],
-            ),
-
-
-
-
-        },
+        column_config=COLUMN_CONFIG,
         hide_index=True,
     )
+
 
     # # True if edited_df != submission_df
     # has_changes = not edited_df.equals(st.session_state.submissions_df)

@@ -1,9 +1,13 @@
 import streamlit as st
 import time
+import yaml
 
 from pages.no_records_page import no_records_page 
 from utils.generate_taggings import step_1, step_2, step_3, step_4, step_5, step_6, step_7, step_8
 
+
+# helper funcs
+from utils.streamlit.general_helpers import persist_key, load_config
 
 # backend
 def predict_entries(progress_placeholder, container, df):
@@ -74,7 +78,7 @@ def predict_entries(progress_placeholder, container, df):
 
 
 
-def predict_page():
+def predict_page(COLUMN_CONFIG):
     """
     UI when user chooses `Predict` as the selected CRUD operation
     """
@@ -96,7 +100,11 @@ def predict_page():
     # progress bar
     progress_placeholder = st.empty()
 
-    st.dataframe(st.session_state.submissions_df, hide_index=True)
+    st.dataframe(
+        st.session_state.submissions_df,
+        column_config=COLUMN_CONFIG,
+        hide_index=True
+    )
 
 
     st.button(
@@ -108,4 +116,6 @@ def predict_page():
     
 
 if __name__ == '__main__':
-    predict_page()
+    config = load_config()
+    COLUMN_CONFIG = config.get('column_config')
+    predict_page(COLUMN_CONFIG)
