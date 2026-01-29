@@ -17,7 +17,7 @@ def create_sf_session(
         'user': user, 
         'role': role,
         'warehouse': warehouse,
-        'query_tag': f'ISDP OCR Tool'
+        'query_tag': f'Enterprise - ISDP OCR Tool Dev'
     }
 
     return Session.builder.configs(connection_parameters).create()

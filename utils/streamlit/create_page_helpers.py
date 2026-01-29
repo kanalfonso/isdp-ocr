@@ -184,6 +184,17 @@ def process_submission():
     latest_submission.insert(0, 'id', range(start_id, start_id + len(latest_submission)))
 
 
+    ### TODO: temporary workaround, fix in code for spam_tag and CONTENT
+    # add col for spam_tag
+    latest_submission['spam_tag'] = None
+
+    # rename text_submission to CONTENT
+    latest_submission.rename(columns={'text_submission': 'CONTENT'}, inplace=True)
+
+
+
+
+
     # List of new IDs added
     new_ids = latest_submission['id'].tolist()
 

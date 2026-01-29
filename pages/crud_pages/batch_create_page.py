@@ -1,13 +1,14 @@
-# for parse images -> TODO: refine helper func (AI must auto detect the fields declared) 
-# for process submission -> # TODO: to reduce clutter, make this a helper func instead -> DONE
-# TODO: add option in side bar to parse selected doc only (parse mode: batch vs solo) 
+ # for process submission -> # TODO: to reduce clutter, make this a helper func instead -> DONE
+# TODO: add option in side bar to parse selected doc only (parse mode: batch vs solo) -> DONE
 # TODO: let field identifiers be suffixed by file_id (this WILL BE USED FOR validating each button) -> DONE
 # TODO: fix validation buttons -> DONE
 # TODO: Add mechanic where each doc needs to be validated before proceeding with submission -> DONE
-# TODO: create a selected page parse only
+# TODO: refine helper func (AI must auto detect the fields declared) 
+# TODO: Read and display pdf files as well
 
 import streamlit as st
 from PIL import Image
+from streamlit_pdf_viewer import pdf_viewer
 
 # helpers for this page
 from utils.streamlit.create_page_helpers import (
@@ -48,7 +49,7 @@ def sidebar_ui(total_files_uploaded):
             key="_uploaded_files",
             label="Choose images",
             accept_multiple_files=True, 
-            type=["jpg", "png"]
+            type=["jpg", "png", "jpeg", "pdf"]
         )
 
 
@@ -120,6 +121,8 @@ def batch_create_page():
 
     # maximum allowable files to upload
     MAX_FILES = 5
+    IMAGE_FILE_TYPES = ['image/png', 'image/jpeg', 'image/jpg']
+    
 
     st.title('Batch Upload')
 
@@ -213,9 +216,10 @@ def batch_create_page():
 
         current_file = st.session_state.file_id_to_metadata[current_file_id]['UploadedFile']
 
+        
 
-        # Transform uploaded file to Image object
-        img = Image.open(current_file)
+
+
 
         col1, col2 = st.columns([1, 1])
 
@@ -224,8 +228,15 @@ def batch_create_page():
         # Display image file - only one at a time
         with col1:
             st.subheader("Image")
-            st.image(img)
-
+            
+            # Transform uploaded file to Image object
+            if current_file.type in IMAGE_FILE_TYPES:
+                img = Image.open(current_file)
+                st.image(img)
+            
+            if current_file.type == 'application/pdf':
+                pdf = current_file.getvalue()
+                pdf_viewer(pdf)
 
 
 

@@ -61,7 +61,12 @@ def upload_to_sf_page():
             with spinner_placeholder.spinner("Uploading data to Snowflake..."):
                 
                 # Upload data to snowflake and closes session afterwards
-                df_to_upload = st.session_state.submissions_df[['sender', 'content', 'spam_tag']].copy()
+                df_to_upload = st.session_state.submissions_df[['sender', 'CONTENT', 'spam_tag']].copy()
+
+                df_to_upload['USER_EMAIL'] = None
+                df_to_upload['USER_TRANSACTION_DATE'] = None
+
+
                 df_to_upload.columns = df_to_upload.columns.str.upper()
                 upload_data_to_sf(session, df_to_upload)
                 time.sleep(2)
