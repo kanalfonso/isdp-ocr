@@ -13,8 +13,8 @@ from PIL import Image
 from utils.streamlit.create_page_helpers import (
     persist_create_text_fields, 
     
-    # On-click `Parse All Documents`
-    parse_images,
+    # On-click `Parse All Documents` or On-click `Parse Current Document`
+    parse_documents,
 
     # Checks if all docs validated to unlock submit btn
     all_docs_validated, 
@@ -53,12 +53,21 @@ def sidebar_ui(total_files_uploaded):
 
 
         if st.session_state.get('_uploaded_files'):
-            # Parse Image button
-            st.button(
-                'Parse All Documents',
-                key='_parse_image',
-            )
+            
+            batch_processing_mode = st.toggle("Batch Processing", value=True)
+            
+            if batch_processing_mode:
+                # Batch processing of image-to-text extraction
+                st.button(
+                    'Parse All Documents',
+                    key='_batch_parsing',
+                )
 
+            else:
+                st.button(
+                    'Parse Current Document',
+                    key='_solo_parsing',
+                )
 
             st.divider()
 
@@ -160,11 +169,6 @@ def batch_create_page():
         total_files_uploaded = len(st.session_state.get('_uploaded_files'))
 
 
-        # If the `Parse Image` button is clicked
-        if st.session_state.get('_parse_image'):
-            # Stores parsed text to st.session_state._text_submission
-            parse_images(container, st.session_state.get('_uploaded_files'))
-
         
 
         select_options = [file.file_id for file in uploaded_files]
@@ -175,6 +179,23 @@ def batch_create_page():
             options=select_options,   # uuid
             format_func=lambda file_id: f"Document {st.session_state.file_id_to_metadata[file_id]['idx']} - {st.session_state.file_id_to_metadata[file_id]['file_name']}"
         )
+
+
+        # If the `Parse All Documents` button is clicked (batch processing mode)
+        if st.session_state.get('_batch_parsing'):
+
+            file_ids = list(st.session_state.file_id_to_metadata.keys())
+
+            # Stores parsed text to st.session_state._text_submission
+            parse_documents(container, file_ids)
+
+
+
+        # If the `Parse Current Document` button is clicked (solo processing mode)
+        if st.session_state.get('_solo_parsing'):
+            # Stores parsed text to st.session_state._text_submission
+            parse_documents(container, [current_file_id])
+
 
 
         # re-fill text widgets (keys with `_` prefix) to the parse results of the associated document

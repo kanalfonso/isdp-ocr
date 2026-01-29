@@ -116,32 +116,22 @@ def clear_content(container, current_file_id):
 
 
 
-
-# backend func
-def parse_images(
-        container: st.delta_generator.DeltaGenerator, 
-        uploaded_files: list
-        
-    ) -> str:
+def parse_documents(
+    container: st.delta_generator.DeltaGenerator,
+    file_ids: list[str],
+):
     """
-    Parse image by passing image as bytes
-
-    Notifies image has been successfully parsed 
-    Stores results to `_text_submission` in session state
+    Parses one or more documents and updates progress UI.
     """
+
     status = container.empty()
+    progress_bar = status.progress(0.0, text="Starting processing...")
 
-    total_files = len(uploaded_files)
+    total = len(file_ids)
 
-    progress_bar = status.progress(0, text="Starting processing...")
-
-
-
-    for file_id in st.session_state.file_id_to_metadata.keys():
-
-        idx, file = st.session_state.file_id_to_metadata[file_id]['idx'], st.session_state.file_id_to_metadata[file_id]['UploadedFile']
-
-        time.sleep(1)
+    for idx, file_id in enumerate(file_ids, start=1):
+        
+        file = st.session_state.file_id_to_metadata[file_id]['UploadedFile']
 
         # convert to Image object
         img_file = Image.open(file)
@@ -159,22 +149,22 @@ def parse_images(
         st.session_state.create_text_results[f'text_submission_{file_id}'] = f'parsed text for doc {file_id}'
         # st.session_state.create_text_results[f'text_submission_{idx}'] = parsed_text
 
-
+        time.sleep(1)
         # start at 1
-        progress = (idx) / total_files
+        progress = (idx) / total
         
         progress_bar.progress(
             progress,
-            text=f'Processing file {idx} out of {total_files}'
+            text=f'Processing file {idx} out of {total}'
         )
 
+    time.sleep(1)
 
-    if (idx) == total_files:
-        time.sleep(1)  # allow UI to render final state
-    
-
-    status.success("✅ All files processed successfully!")
-
+    status.success(
+        "✅ Current file displayed has been parsed!"
+        if total == 1
+        else "✅ All files processed successfully!"
+    )
 
 
 
@@ -209,41 +199,5 @@ def process_submission():
     st.session_state.is_successful_create_submission = True
 
 
-
-# def convert_bytes_to_hash(file: UploadedFile) -> str:
-#     """
-#     This func takes an `UploadedFile`, converts it into a bytes object 
-    
-#     Returns a hash digest of type str
-#     """
-
-#     # read file as bytes
-#     file_bytes = file.getvalue()
-
-#     # instantiate hash object
-#     sha = hashlib.sha256()
-
-#     # create hash digest from bytes
-#     sha.update(file_bytes)
-
-
-#     return sha.hexdigest()
-
-
-
-
-# def storing_doc_metadata(
-#         file: UploadedFile, 
-#         doc_id_to_metadata: dict,
-#     ):
-
-#     """
-#     Updates values for st.session_state.doc_id_to_metadata when a file is passed, regardless if existing or old
-#     """
-    
-#     doc_id_to_metadata[file.file_id] = {
-#         'file_name': file.name,
-#         'UploadedFile': file
-#     }
 
 
