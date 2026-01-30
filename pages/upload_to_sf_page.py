@@ -1,9 +1,12 @@
 import streamlit as st
 from pages.no_records_page import no_records_page
 import time
-import yaml
 
-from utils.snowflake_utils import create_sf_session, upload_data_to_sf
+from datetime import datetime
+
+
+# Snowflake functions
+from utils.snowflake_utils import create_session_using_sa, upload_data_to_sf
 
 # helper funcs
 from utils.streamlit.general_helpers import load_config
@@ -49,8 +52,8 @@ def upload_to_sf_page(COLUMN_CONFIG):
         container = st.container()
 
         container.info(
-            "ℹ️ Clicking **Submit** uploads your records to a dedicated Snowflake table."
-            "\n\nThis action cannot be undone. Updates or deletions must be done directly in Snowflake."
+            "ℹ️ Clicking **Submit** uploads your records to a Snowflake table."
+            "\n\nThis action cannot be undone. Updates or deletions must be done directly in Snowflake if needed."
         )
         
         spinner_placeholder = st.empty()
@@ -59,26 +62,32 @@ def upload_to_sf_page(COLUMN_CONFIG):
             with spinner_placeholder.spinner("Creating Snowflake session..."):
     
                 # Create session
-                session = create_sf_session()
+                session = create_session_using_sa()
                 time.sleep(2)
 
             with spinner_placeholder.spinner("Uploading data to Snowflake..."):
                 
                 # Upload data to snowflake and closes session afterwards
-                df_to_upload = st.session_state.submissions_df[['sender', 'CONTENT', 'spam_tag']].copy()
+                df_to_upload = st.session_state.submissions_df.copy()
+                
+                # Add col for email
+                df_to_upload['email'] = st.session_state.email
 
-                df_to_upload['USER_EMAIL'] = None
-                df_to_upload['USER_TRANSACTION_DATE'] = None
+                # Add col for date submitted
+                dt_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                df_to_upload['submission_time'] = dt_str
 
 
+                # standardize upper case for all cols
                 df_to_upload.columns = df_to_upload.columns.str.upper()
+                
+                # reorder column before submission
+                COL_ORDER = ['EMAIL', 'SUBMISSION_TIME', 'SENDER', 'SMS_CONTENT', 'SPAM_TAG']
+                df_to_upload = df_to_upload[COL_ORDER]
+    
                 upload_data_to_sf(session, df_to_upload)
                 time.sleep(2)
 
-            with spinner_placeholder.spinner("Closing session..."):
-                # Close session
-                session.close()
-                time.sleep(2)
 
 
             st.session_state.confirm_sf_upload = False

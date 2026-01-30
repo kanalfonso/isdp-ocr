@@ -5,10 +5,6 @@ from PIL import Image
 from utils.image_processing import pil_image_to_bytes, detect_text_from_bytes
 
 
-from datetime import datetime
-
-
-
 def persist_create_text_fields(key):
     st.session_state.create_text_results[key] = st.session_state['_' + key] 
 
@@ -39,8 +35,8 @@ def unlock_entry(
     Unlocks text fields for the selected entry
     """
 
-    container.info(
-        'ℹ️ Fields have been unlocked. Please lock to process submission.'
+    container.success(
+        '✅ Fields have been unlocked. Please lock to process submission.'
     )
 
     st.session_state[f'is_validated_doc_{current_file_id}'] = False
@@ -64,7 +60,7 @@ def validate_entry(
         return
 
 
-    if (st.session_state[f'_text_submission_{current_file_id}'] is None) or (st.session_state[f'_text_submission_{current_file_id}'].strip() == ""):
+    if (st.session_state[f'_sms_content_{current_file_id}'] is None) or (st.session_state[f'_sms_content_{current_file_id}'].strip() == ""):
         container.error('⚠️ Please ensure that the **Parsed Message** text field is not **BLANK**!')   
         return
 
@@ -81,7 +77,7 @@ def validate_entry(
 # backend func
 def clear_content(container, current_file_id):
     """
-    Set st.session_state._text_submission to None
+    Set st.session_state._sms_content to None
     """
     
     # Clear both perm and temp keys
@@ -89,8 +85,8 @@ def clear_content(container, current_file_id):
     st.session_state[f'_sender_{current_file_id}'] = None
     
     # Clear both perm and temp keys
-    st.session_state.create_text_results[f'text_submission_{current_file_id}'] = None
-    st.session_state[f'_text_submission_{current_file_id}'] = None
+    st.session_state.create_text_results[f'sms_content_{current_file_id}'] = None
+    st.session_state[f'_sms_content_{current_file_id}'] = None
     
     st.session_state[f'is_validated_doc_{current_file_id}'] = False
 
@@ -128,8 +124,8 @@ def parse_documents(
         # store permanently in create_text_results
 
         st.session_state.create_text_results[f'sender_{file_id}'] = f'sender for doc {file_id}'
-        st.session_state.create_text_results[f'text_submission_{file_id}'] = f'parsed text for doc {file_id}'
-        # st.session_state.create_text_results[f'text_submission_{idx}'] = parsed_text
+        st.session_state.create_text_results[f'sms_content_{file_id}'] = f'parsed text for doc {file_id}'
+        # st.session_state.create_text_results[f'sms_content_{idx}'] = parsed_text
 
         time.sleep(1)
         # start at 1
@@ -193,17 +189,11 @@ def process_submission():
     # Add col for spam_tag
     latest_submission['spam_tag'] = None
 
-    # Add col for email
-    latest_submission['email'] = st.session_state.email
-
-    # Add col for date submitted
-    dt_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    latest_submission['submission_time'] = dt_str
 
 
-    COL_ORDER = ['id', 'email', 'submission_time', 'sender', 'text_submission', 'spam_tag'] 
+    COL_ORDER = ['id', 'sender', 'sms_content', 'spam_tag'] 
     
-    # Reorder columns
+    # Reorder columns using the list above
     latest_submission = latest_submission[COL_ORDER]
 
 

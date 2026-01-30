@@ -7,7 +7,7 @@ from utils.generate_taggings import step_1, step_2, step_3, step_4, step_5, step
 
 
 # helper funcs
-from utils.streamlit.general_helpers import persist_key, load_config
+from utils.streamlit.general_helpers import load_config
 
 # backend
 def predict_entries(progress_placeholder, container, df):
@@ -104,6 +104,7 @@ def predict_page(COLUMN_CONFIG):
         st.session_state.submissions_df,
         column_config=COLUMN_CONFIG,
         hide_index=True
+        
     )
 
 

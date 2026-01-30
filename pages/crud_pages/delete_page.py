@@ -2,7 +2,7 @@ import streamlit as st
 from pages.no_records_page import no_records_page
 
 # helper funcs
-from utils.streamlit.general_helpers import persist_key, load_config
+from utils.streamlit.general_helpers import load_config
 
 ### Pop-up message when `Delete entry` has been clicked ### 
 @st.dialog('Confirm Deletion')

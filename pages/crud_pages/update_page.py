@@ -1,9 +1,6 @@
 import streamlit as st
 from pages.no_records_page import no_records_page
 
-# helper funcs
-from utils.streamlit.general_helpers import load_config
-
 
 @st.dialog("Confirm Update")
 def update_popup(edited_df):
@@ -55,23 +52,13 @@ def update_page():
                     disabled=True
         ),
 
-        "email": st.column_config.TextColumn(
-            label="Email", # display column name
-            disabled=True
-        ),
-
-        "submission_time": st.column_config.TextColumn(
-            label="Submission Time", # display column name
-            disabled=True
-        ),
-
         "sender": st.column_config.TextColumn(
             label="Sender", # display column name
             disabled=False
         ),
 
-        "text_submission": st.column_config.TextColumn(
-            label="Content", # display column name
+        "sms_content": st.column_config.TextColumn(
+            label="SMS Content", # display column name
             disabled=False
         ),
 

@@ -125,6 +125,11 @@ def batch_create_page(MAX_FILES: int, ACCEPTED_IMAGE_FILE_TYPES: list):
 
     st.title('Create Records')
 
+    if st.session_state.get('_uploaded_files'):
+        st.info(
+            "ℹ️ Entries must be validated after parsing before they can be submitted"
+        )
+    
     # Container for notif
     container = st.container()
 
@@ -188,14 +193,14 @@ def batch_create_page(MAX_FILES: int, ACCEPTED_IMAGE_FILE_TYPES: list):
 
             file_ids = list(st.session_state.file_id_to_metadata.keys())
 
-            # Stores parsed text to st.session_state._text_submission
+            # Stores parsed text to st.session_state._sms_content
             parse_documents(container, file_ids)
 
 
 
         # If the `Parse Current Document` button is clicked (solo processing mode)
         if st.session_state.get('_solo_parsing'):
-            # Stores parsed text to st.session_state._text_submission
+            # Stores parsed text to st.session_state._sms_content
             parse_documents(container, [current_file_id])
 
 
@@ -206,8 +211,8 @@ def batch_create_page(MAX_FILES: int, ACCEPTED_IMAGE_FILE_TYPES: list):
             st.session_state[f'_sender_{current_file_id}'] = st.session_state.create_text_results[f'sender_{current_file_id}']
 
 
-        if st.session_state.create_text_results.get(f'text_submission_{current_file_id}'):
-            st.session_state[f'_text_submission_{current_file_id}'] = st.session_state.create_text_results[f'text_submission_{current_file_id}']
+        if st.session_state.create_text_results.get(f'sms_content_{current_file_id}'):
+            st.session_state[f'_sms_content_{current_file_id}'] = st.session_state.create_text_results[f'sms_content_{current_file_id}']
 
 
 
@@ -257,19 +262,20 @@ def batch_create_page(MAX_FILES: int, ACCEPTED_IMAGE_FILE_TYPES: list):
                 args=[f'sender_{current_file_id}'],
                 disabled=is_validated,
                 label='Sender',
+                placeholder='Results appear here after parsing.'
             )
 
             st.text_area(
-                key=f'_text_submission_{current_file_id}',
+                key=f'_sms_content_{current_file_id}',
 
                 # to persist value even when switching pages, 
                 # with this, manual edits get stored to persistent key as well
                 on_change=persist_create_text_fields,  
-                args=[f'text_submission_{current_file_id}'],
+                args=[f'sms_content_{current_file_id}'],
                 label="Parsed Message",
                 disabled=is_validated,
                 height=300,
-                placeholder='Results will load here after `Parse Image` button is clicked.',
+                placeholder='Results appear here after parsing.',
             )
 
 

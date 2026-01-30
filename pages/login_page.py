@@ -9,6 +9,7 @@ from googleapiclient.discovery import build
 import streamlit as st
 from streamlit_oauth import OAuth2Component
 
+from utils.streamlit.general_helpers import load_whitelist
 
 oauth_params = st.secrets['oauth_client_secret']
 
@@ -26,8 +27,7 @@ def get_user_email(credentials: Credentials) -> str:
 # OAuth authentication function
 def oauth_authentication():
     try:
-        with open('config.yaml', "r") as f:
-            config = yaml.safe_load(f)
+        EMAIL_WHITELIST = load_whitelist()
 
         oauth2 = OAuth2Component(CLIENT_ID, CLIENT_SECRET, AUTHORIZE_ENDPOINT, TOKEN_ENDPOINT, TOKEN_ENDPOINT, REVOKE_ENDPOINT)
         result = oauth2.authorize_button(
@@ -52,7 +52,7 @@ def oauth_authentication():
             st.session_state['email'] = email
 
             # Check for email access
-            if st.session_state['email'] in config.get('email_whitelist', []):
+            if st.session_state['email'] in EMAIL_WHITELIST:
                 st.rerun()
             else:
                 st.warning(f"Access denied for {email}. You do not have the required privileges.", icon="🚫")

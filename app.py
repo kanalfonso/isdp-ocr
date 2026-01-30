@@ -2,6 +2,8 @@ import streamlit as st
 import yaml
 import pandas as pd
 
+from utils.streamlit.general_helpers import load_whitelist
+
 def main():
     """
     Main function to control the Streamlit app workflow.
@@ -38,14 +40,14 @@ def main():
     upload_to_sf_page = st.Page('pages/upload_to_sf_page.py', title='Upload to Snowflake', icon='❄️')
     # connection_page = st.Page('pages/connection_page.py', title='Connect to Snowflake', icon='❄️')
     
-    with open('config.yaml', "r") as f:
-        config = yaml.safe_load(f)
+    # TODO: temporary fix
+    EMAIL_WHITELIST = load_whitelist()
 
 
 
     ## LOGIN LOGIC ###
     # email whitelist logic
-    if "credentials" in st.session_state and st.session_state['email'] in config.get('email_whitelist', []):
+    if "credentials" in st.session_state and st.session_state['email'] in EMAIL_WHITELIST:
 
         pages = {
             "Records": [

@@ -1,7 +1,7 @@
 import streamlit as st
 from pages.no_records_page import no_records_page 
 # helper funcs
-from utils.streamlit.general_helpers import persist_key, load_config
+from utils.streamlit.general_helpers import load_config
 
 def read_page(COLUMN_CONFIG: dict):
     """
