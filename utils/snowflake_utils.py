@@ -83,18 +83,19 @@ def upload_data_to_sf(
 
 
 def main():
-    print("1) Creating session...\n")
-    session = create_session_using_sa()
+    pass
+    # print("1) Creating session...\n")
+    # session = create_session_using_sa()
 
-    print("2) Querying results...\n")
-    query = """
-    SELECT *
-    FROM GRP_SBX_ISDP.OCR.STOPSPAM_SUBMISSIONS
-    ORDER BY submission_time
-    LIMIT 2
-    """
+    # print("2) Querying results...\n")
+    # query = """
+    # SELECT *
+    # FROM GRP_SBX_ISDP.OCR.STOPSPAM_SUBMISSIONS
+    # ORDER BY submission_time
+    # LIMIT 2
+    # """
     
-    print(query_results(session, query))
+    # print(query_results(session, query))
 
 
 if __name__ == '__main__':
